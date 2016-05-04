@@ -1,5 +1,5 @@
 name:                quid2-net-apps
-version:             0.1.0.0
+version:             0.1
 synopsis:            Example applications for quid2-net
 description:         Please see README.md
 homepage:            http://github.com/tittoassini/quid2-net-apps
@@ -8,7 +8,7 @@ license-file:        LICENSE
 author:              Pasqualino `Titto` Assini
 maintainer:          tittoassini@gmail.com
 copyright:           Copyright: (c) 2016 Pasqualino `Titto` Assini
-category:            Data
+category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 

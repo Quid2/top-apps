@@ -1,9 +1,5 @@
 {-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-
-TODOs:
--- .. too many to list
--}
 -- |A very basic chat client
 module Main where
 
@@ -18,16 +14,15 @@ import           Pipes                     (cat, for)
 import           Pipes.Prelude             (stdinLn)
 import           System.Environment
 
--- Program parameters: <Input> <Output> <Debug>
+-- | Program parameters: <Input> <Output> <Debug>
 -- To avoid problems with user input and message mixing up in the terminal,
 -- run one instance in Input and another in Output mode.
-
 data Mode = Input
           | Output
           | Debug
           deriving (Eq,Read,Show)
 
--- Save the model
+-- Save the model, need to this just once.
 u = recordType def (Proxy::Proxy Message)
 
 t = main

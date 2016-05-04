@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 module Chat.Model where
 
--- import Data.Model
 import  Data.Typed
 
 -- Data model for a simple chat system
@@ -57,5 +56,3 @@ instance Model Message
 instance Model User
 instance Model Subject
 instance (Model a,Model b) => Model (Content a b)
-
-
