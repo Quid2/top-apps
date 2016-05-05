@@ -1,6 +1,6 @@
 Example applications, in Haskell, for [quid2-net](https://github.com/tittoassini/quid2-net).
 
-Developing distributed applications in Haskell that use the quid2-net transport protocol is straightforward:
+Developing distributed applications that use the quid2-net transport protocol is straightforward:
 * define a data model, that's just one or more serialisable Haskell data types
 * automatically derive instances of the *Flat* (serialisation) and *Model* (introspection) classes
 * connect to one or more typed channels and send/receive values and get in communication with any other client using the same types
@@ -142,7 +142,7 @@ There might be some value in a versatile and open distributed sensor network but
 
 And here we come to the main point about quid2.net: to facilitate large scale data exchange by progressively converging on a shared lexicon of data types.
 
-Before inventing your own types you should check the [list of currently known types](http://quid2.net:8000).
+Before inventing your own types you should check those [already defined](http://quid2.org/app/ui).
 
 The more you reuse existing concepts, the greater the value of your data and programs.
 
