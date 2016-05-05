@@ -18,8 +18,8 @@ main = do
 reader = runClient def (ByType::ByType (Signed String Ed255619)) loop
       where loop conn = do
               Signed value signature <- input conn
-              let outputer = if verify johnPublicKey value signature then "John" else "Some random guy"
-              putStrLn . unwords $ [outputer,"says:",value]
+              let sender = if verify johnPublicKey value signature then "John" else "Some random guy"
+              putStrLn . unwords $ [sender,"says:",value]
               loop conn
 
 -- This is really John
