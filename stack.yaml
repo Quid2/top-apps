@@ -1,11 +1,11 @@
-resolver: lts-5.14
+resolver: lts-5.15
 
 packages:
 - .
 - ../flat
 - ../model
 - ../typed
-- ../quid2-net
+- ../top
 
 extra-deps:
 - ed25519-0.0.5.0

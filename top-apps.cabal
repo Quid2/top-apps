@@ -1,8 +1,8 @@
-name:                quid2-net-apps
+name:                top-apps
 version:             0.1
-synopsis:            Example applications for quid2-net
+synopsis:            Example applications for top, the typed oriented protocol.
 description:         Please see README.md
-homepage:            http://github.com/tittoassini/quid2-net-apps
+homepage:            http://github.com/tittoassini/top-apps
 license:             BSD3
 license-file:        LICENSE
 author:              Pasqualino `Titto` Assini
@@ -12,52 +12,52 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable quid2-hello
+executable top-hello
   hs-source-dirs:      app
   main-is:             hello.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,typed,quid2-net
+  build-depends:       base,transformers,typed,top
   default-language:    Haskell2010
 
-executable quid2-chat
+executable top-chat
   hs-source-dirs:      app
   main-is:             Chat/chat.hs
   other-modules:       Chat.Model,Chat.Util
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,async,pipes,typed,quid2-net
+  build-depends:       base,transformers,async,pipes,typed,top
   default-language:    Haskell2010
 
-executable quid2-chat-history
+executable top-chat-history
   hs-source-dirs:      app
   main-is:             Chat/chat-history.hs
   other-modules:       Chat.Model
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,pipes,typed,quid2-net
+  build-depends:       base,transformers,pipes,typed,top
   default-language:    Haskell2010
 
-executable quid2-signed
+executable top-signed
   hs-source-dirs:      app
   main-is:             signed.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,bytestring,ed25519,typed,quid2-net
+  build-depends:       base,transformers,bytestring,ed25519,typed,top
   default-language:    Haskell2010
 
-executable quid2-sensor
+executable top-sensor
   hs-source-dirs:      app
   main-is:             Sensor/sensor1.hs
   other-modules:       Sensor.Model1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,typed,quid2-net
+  build-depends:       base,typed,top
   default-language:    Haskell2010
 
-executable quid2-sensor-check
+executable top-sensor-check
   hs-source-dirs:      app
   main-is:             Sensor/sensor-check1.hs
   other-modules:       Sensor.Model1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,typed,quid2-net
+  build-depends:       base,typed,top
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/tittoassini/quid2-net-apps
+  location: https://github.com/tittoassini/top-apps
