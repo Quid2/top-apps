@@ -1,5 +1,5 @@
 
-Example applications, in Haskell, for [top](https://github.com/tittoassini/top).
+Example applications, in Haskell, for [Top](https://github.com/tittoassini/top).
 
 Developing distributed applications that use *Top*, the typed transport protocol, is straightforward:
 * define a data model, that's just one or more serialisable Haskell data types
