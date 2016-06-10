@@ -4,11 +4,11 @@
 import Network.Top
 
 {-
-runClientForever opens a connection to a quid2 channel and keeps it alive even across transient network failures.
+runClientForever opens a connection to a Top channel and keeps it alive even across transient network failures.
 
 The parameters are:
 def:
-The default quid2.net network configuration, no need to change this.
+The default Top network configuration, no need to change this.
 
 ByType:
 The kind of routing logic that we want to use on this connection.

@@ -7,7 +7,7 @@ import Sensor.Model1
 main = runClientForever def ByType loop
      where
        loop conn = do
-         Just (MySensor temperature) <- input conn
+         MySensor temperature <- input conn
          print $ show temperature ++ " Celsius"
          when (temperature > 50) $ print "ALARM, HOUSE ON FIRE!!!!"
          loop conn

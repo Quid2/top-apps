@@ -5,7 +5,7 @@ import Network.Top
 main = runClientForever def (ByType::ByType Int) loop
      where
        loop conn = do
-         Just temperature :: Maybe Int <- input conn
+         temperature :: Int <- input conn
          print $ show temperature ++ " Celsius"
          when (temperature > 50) $ print "ALARM, HOUSE ON FIRE!!!!"
          loop conn

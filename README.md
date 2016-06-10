@@ -1,7 +1,7 @@
 
 Example applications, in Haskell, for [top](https://github.com/tittoassini/top).
 
-Developing distributed applications that use *top*, the typed transport protocol, is straightforward:
+Developing distributed applications that use *Top*, the typed transport protocol, is straightforward:
 * define a data model, that's just one or more serialisable Haskell data types
 * automatically derive instances of the *Flat* (serialisation) and *Model* (introspection) classes
 * connect to one or more typed channels and send/receive values and get in communication with any other client using the same types
@@ -10,7 +10,7 @@ Developing distributed applications that use *top*, the typed transport protocol
 
 Suppose that you want to keep an eye on your house while at work, and in particular check for possible fires.
 
-A `sensor` program that reads the temperature from a sensor and broadcast it using top would be:
+A `sensor` program that reads the temperature from a sensor and broadcast it using *Top* would be:
 
 ```haskell
 -- Broadcast a temperature reading every few minutes
@@ -19,11 +19,11 @@ A `sensor` program that reads the temperature from a sensor and broadcast it usi
 import Network.Top
 
 {-
-runClientForever opens a connection to a quid2 channel and keeps it alive even across transient network failures.
+runClientForever opens a connection to a Top channel and keeps it alive even across transient network failures.
 
 The parameters are:
 def:
-The default quid2.net network configuration, no need to change this.
+The default Top network configuration, no need to change this.
 
 ByType:
 The kind of routing logic that we want to use on this connection.
@@ -63,7 +63,7 @@ import Network.Top
 main = runClientForever def (ByType::ByType Int) loop
      where
        loop conn = do
-         Just temperature :: Maybe Int <- input conn
+         temperature :: Int <- input conn
          print $ show temperature ++ " Celsius"
          when (temperature > 50) $ print "ALARM, HOUSE ON FIRE!!!!"
          loop conn
@@ -73,7 +73,7 @@ main = runClientForever def (ByType::ByType Int) loop
 
 It could not be easier than this.
 
-There is just a little issue, as we mentioned, in *top* there is a channel for every possible serialisable type.
+There is just a little issue, as we mentioned, in *Top* there is a channel for every possible serialisable type.
 
 Our data will therefore travel over the 'Int' channel.
 
@@ -129,7 +129,7 @@ import Sensor.Model1
 main = runClientForever def ByType loop
      where
        loop conn = do
-         Just (MySensor temperature) <- input conn
+         MySensor temperature <- input conn
          print $ show temperature ++ " Celsius"
          when (temperature > 50) $ print "ALARM, HOUSE ON FIRE!!!!"
          loop conn
@@ -145,7 +145,7 @@ More importantly, what if our friends also want to access their sensors?
 
 There might be some value in a versatile and open distributed sensor network but to support it we need a much richer and shareable model that others might be willing to adopt.
 
-And here we come to the main point about top: to facilitate large scale data exchange by progressively converging on a shared lexicon of data types.
+And here we come to the main point about *Top*: to facilitate large scale data exchange by progressively converging on a shared lexicon of data types.
 
 Before inventing your own types you should check those [already defined](http://quid2.org/app/ui).
 
@@ -202,10 +202,10 @@ For example: `stack exec top-hello`.
 #### API Documentation
 
 Start with:
-* [Network.Top.Run](src/Network.Top/Run.hs)
-* [Network.Top.Pipes](src/Network.Top/Pipes.hs)
-* [Network.Top.Types](src/Network.Top/Types.hs)
+* [Network.Top.Run](src/Network/Top/Run.hs)
+* [Network.Top.Pipes](src/Network/Top/Pipes.hs)
+* [Network.Top.Types](src/Network/Top/Types.hs)
 
 ### Installation
 
-Currently needs to be installed as part of the [quid2](https://github.com/tittoassini/quid2) project.
+Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
