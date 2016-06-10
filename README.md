@@ -202,9 +202,9 @@ For example: `stack exec top-hello`.
 #### API Documentation
 
 Start with:
-* [Network.Top.Run](src/Network/Top/Run.hs)
-* [Network.Top.Pipes](src/Network/Top/Pipes.hs)
-* [Network.Top.Types](src/Network/Top/Types.hs)
+* [Network.Top.Run](blob/master/src/Network/Top/Run.hs)
+* [Network.Top.Pipes](blob/master/src/Network/Top/Pipes.hs)
+* [Network.Top.Types](blob/master/src/Network/Top/Types.hs)
 
 ### Installation
 
