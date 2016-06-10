@@ -1,5 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
-import Network.Quid2
+{-# LANGUAGE DeriveGeneric ,DeriveAnyClass #-}
+import Network.Top
 
 -- |Send a message and then print out all messages received
 main = runClient def ByType $ \conn -> do
@@ -12,15 +12,10 @@ main = runClient def ByType $ \conn -> do
 data Message = Message {
      fromUser::String
     ,content::Content
-    } deriving (Eq, Ord, Read, Show, Generic)
+    } deriving (Eq, Ord, Read, Show, Generic , Flat, Model)
 
 data Content =
     TextMessage String
 
     | HTMLMessage String
-    deriving (Eq, Ord, Read, Show, Generic)
-
-instance Flat Message
-instance Flat Content
-instance Model Message
-instance Model Content
+    deriving (Eq, Ord, Read, Show, Generic, Flat, Model)

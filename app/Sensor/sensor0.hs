@@ -1,7 +1,7 @@
 -- Broadcast a temperature reading every few minutes
 
 -- Import the Quid2 API
-import Network.Quid2
+import Network.Top
 
 {-
 runClientForever opens a connection to a quid2 channel and keeps it alive even across transient network failures.

@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric ,NoMonomorphismRestriction #-}
-import Network.Quid2
+import Network.Top
 import qualified Crypto.Sign.Ed25519 as S
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString as B

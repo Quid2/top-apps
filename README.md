@@ -1,3 +1,4 @@
+
 Example applications, in Haskell, for [top](https://github.com/tittoassini/top).
 
 Developing distributed applications that use *top*, the typed transport protocol, is straightforward:
@@ -14,15 +15,15 @@ A `sensor` program that reads the temperature from a sensor and broadcast it usi
 ```haskell
 -- Broadcast a temperature reading every few minutes
 
--- Import the API
-import Network.Quid2
+-- Import the Quid2 API
+import Network.Top
 
 {-
-runClientForever opens a connection to a top channel and keeps it alive even across transient network failures.
+runClientForever opens a connection to a quid2 channel and keeps it alive even across transient network failures.
 
 The parameters are:
 def:
-The default top network configuration, no need to change this.
+The default quid2.net network configuration, no need to change this.
 
 ByType:
 The kind of routing logic that we want to use on this connection.
@@ -31,7 +32,7 @@ We do not need to indicate explicitly the type, as it is implicitly specified by
 
 loop:
 The application code, it is passed the connection as soon as it is opened.
-It uses `send` and `receive` to communicate.
+It uses `output` to send out the sensor reading.
 -}
 main = runClientForever def ByType loop
      where
@@ -40,7 +41,7 @@ main = runClientForever def ByType loop
         -- Read the sensor value
         reading <- readSensor
         -- Send the value on the 'Int' channel
-        send conn reading
+        output conn reading
 
         -- Wait and repeat
         threadDelay (minutes 3)
@@ -50,22 +51,26 @@ main = runClientForever def ByType loop
 readSensor :: IO Int
 readSensor = return 15
 ```
+[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor0.hs)
 
 We will also need a `sensor-check` program to collect the data and print it out: 
 
 ```haskell
 {-# LANGUAGE ScopedTypeVariables #-}
-import Network.Quid2
+import Network.Top
 
 -- |Collect sensor data and give warnings if needed
 main = runClientForever def (ByType::ByType Int) loop
      where
        loop conn = do
-         temperature :: Int <- receive conn
+         Just temperature :: Maybe Int <- input conn
          print $ show temperature ++ " Celsius"
          when (temperature > 50) $ print "ALARM, HOUSE ON FIRE!!!!"
          loop conn
+
 ```
+[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check0.hs)
+
 It could not be easier than this.
 
 There is just a little issue, as we mentioned, in *top* there is a channel for every possible serialisable type.
@@ -79,18 +84,16 @@ Time to develop a slightly more sophisticated data model.
 As it will need to be shared between the `sensor` and the `sensor-check` program, we will put the data model in a separate module:
 
 ```haskell
-{-# Language DeriveGeneric #-}
+{-# Language DeriveGeneric ,DeriveAnyClass #-}
 module Sensor.Model1 where
 
 import Data.Typed
 
 -- A rather asinine data model
 data MySensor = MySensor Int -- These are Celsius by the way!
-              deriving (Eq, Ord, Read, Show, Generic)
-
-instance Flat MySensor
-instance Model MySensor
+              deriving (Eq, Ord, Read, Show, Generic, Flat, Model)
 ```
+[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/Model1.hs)
 
 Our data type needs to be an instance of the *Flat* (serialisation) and *Model* (introspection) classes, the instances are automatically derived, provided that the type derives `Generic`.
 
@@ -98,7 +101,7 @@ The `sensor` program has barely changed:
 
 ```haskell
 {-# LANGUAGE DeriveGeneric #-}
-import Network.Quid2
+import Network.Top
 
 import Sensor.Model1
 
@@ -106,19 +109,19 @@ main = runClientForever def ByType loop
      where
        loop conn = do
         reading <- readSensor
-        send conn reading
+        output conn reading
         threadDelay (minutes 3)
         loop conn
 
 readSensor :: IO MySensor
 readSensor = return $ MySensor 15
 ```
+[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor1.hs)
 
 and similarly `sensor-check`:
-
 ```haskell
 {-# LANGUAGE ScopedTypeVariables #-}
-import Network.Quid2
+import Network.Top
 
 import Sensor.Model1
 
@@ -126,11 +129,13 @@ import Sensor.Model1
 main = runClientForever def ByType loop
      where
        loop conn = do
-         MySensor temperature <- receive conn
+         Just (MySensor temperature) <- input conn
          print $ show temperature ++ " Celsius"
          when (temperature > 50) $ print "ALARM, HOUSE ON FIRE!!!!"
          loop conn
+
 ```
+[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check1.hs)
 
 So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us. 
 
@@ -197,9 +202,9 @@ For example: `stack exec top-hello`.
 #### API Documentation
 
 Start with:
-* [Network.Quid2.Run](src/Network/Quid2/Run.hs)
-* [Network.Quid2.Pipes](src/Network/Quid2/Pipes.hs)
-* [Network.Quid2.Types](src/Network/Quid2/Types.hs)
+* [Network.Top.Run](src/Network.Top/Run.hs)
+* [Network.Top.Pipes](src/Network.Top/Pipes.hs)
+* [Network.Top.Types](src/Network.Top/Types.hs)
 
 ### Installation
 

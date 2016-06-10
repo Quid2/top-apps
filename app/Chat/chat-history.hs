@@ -1,6 +1,6 @@
 import           Chat.Model
 import           Control.Monad.Trans.State
-import           Network.Quid2
+import           Network.Top
 
 {-
  A simple bot that stores all messages it sees and returns them on request.

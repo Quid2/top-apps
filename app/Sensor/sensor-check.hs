@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric ,NoMonomorphismRestriction #-}
-import Network.Quid2
+import Network.Top
 
 -- |Send a sensor reading every few minutes
 main = runClientForever def ByType loop

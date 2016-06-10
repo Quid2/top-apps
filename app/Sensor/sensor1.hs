@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
-import Network.Quid2
+import Network.Top
 
 import Sensor.Model1
 

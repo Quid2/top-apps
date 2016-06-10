@@ -9,7 +9,7 @@ import           Control.Concurrent.Async
 import           Control.Monad
 import           Control.Monad.Trans.State
 import           Data.Pattern
-import           Network.Quid2             hiding (cat)
+import           Network.Top             hiding (cat)
 import           Pipes                     (cat, for)
 import           Pipes.Prelude             (stdinLn)
 import           System.Environment
