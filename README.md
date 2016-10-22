@@ -208,4 +208,30 @@ Start with:
 
 ### Installation
 
+It is not yet on [hackage](https://hackage.haskell.org/) but you can still use it in your [stack](https://docs.haskellstack.org/en/stable/README/) projects by adding a reference to its github location under the 'packages' section:
+
+
+````
+packages:
+- location:
+   git: https://github.com/tittoassini/top
+   commit: 33ac741
+- location:
+   git: https://github.com/tittoassini/typed
+   commit: 5cb0f72
+- location:
+   git: https://github.com/tittoassini/flat
+   commit: 3ae580d
+- location:
+   git: https://github.com/tittoassini/model
+   commit: 0e1fe4f
+````
+
+### Compatibility
+
+Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
+
+
+<!--
 Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
+-->

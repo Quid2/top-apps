@@ -1,11 +1,25 @@
-resolver: lts-6.0
+resolver: lts-6.22
+#resolver: lts-7.4
 
 packages:
 - .
-- ../flat
-- ../model
-- ../typed
-- ../top
+#- ../flat
+#- ../model
+#- ../typed
+#- ../top
+
+- location:
+   git: https://github.com/tittoassini/top
+   commit: 33ac741
+- location:
+   git: https://github.com/tittoassini/typed
+   commit: 5cb0f72
+- location:
+   git: https://github.com/tittoassini/flat
+   commit: 3ae580d
+- location:
+   git: https://github.com/tittoassini/model
+   commit: 0e1fe4f
 
 extra-deps:
 - ed25519-0.0.5.0

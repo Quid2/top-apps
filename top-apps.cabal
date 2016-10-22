@@ -12,11 +12,11 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable typed
-  hs-source-dirs:  app
-  main-is:             typed.hs
-  build-depends:       base >= 4.7 && < 5,optparse-applicative,typed,top,containers
-  default-language:    Haskell2010
+-- executable typed
+--  hs-source-dirs:  app
+--  main-is:             typed.hs
+--  build-depends:       base >= 4.7 && < 5,optparse-applicative,typed,top,containers
+--  default-language:    Haskell2010
 
 executable top-hello
   hs-source-dirs:      app
