@@ -111,24 +111,7 @@ Start with:
 
  ### Installation
 
-It is not yet on [hackage](https://hackage.haskell.org/) but you can still use it in your [stack](https://docs.haskellstack.org/en/stable/README/) projects by adding a reference to its github location under the 'packages' section:
-
-
-````
-packages:
-- location:
-   git: https://github.com/tittoassini/top
-   commit: 33ac741
-- location:
-   git: https://github.com/tittoassini/typed
-   commit: 5cb0f72
-- location:
-   git: https://github.com/tittoassini/flat
-   commit: 3ae580d
-- location:
-   git: https://github.com/tittoassini/model
-   commit: 0e1fe4f
-````
+ This is not a library, it is a set of examples, so you should clone it or fork it and take it as a starting point for developing *Top* applications.
 
  ### Compatibility
 
