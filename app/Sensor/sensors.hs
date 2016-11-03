@@ -33,11 +33,11 @@ parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = 
                     in Just . round $ (read (if head n == '+' then tail n else n) :: Float)
                else Nothing
 
-sensor0 read minInterval = do
+sensor read minInterval = do
   r <- read
   print r
 
-sensor read minInterval = run $ \conn -> do
+sensor1 read minInterval = run $ \conn -> do
   let io = either (Left . show) Right <$> strictTry read
   let out v = when (isRight v) $ output conn (fromRight v)
   let loop v = do
