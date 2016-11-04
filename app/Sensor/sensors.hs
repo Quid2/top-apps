@@ -13,7 +13,7 @@ import           System.Process
 import           Text.Regex.TDFA
 
 main = do
-  sensor currentTime (milliseconds 500)
+  forkIO $ sensor currentTime (milliseconds 500)
   sensor cpuTemperature (seconds 10)
 
 -- t ::
@@ -52,7 +52,7 @@ sensor read minInterval = run $ \conn -> do
   out v
   loop v
 
-run app = forkIO $ do
+run app = do
   threadDelay (seconds 30)
   runClientForever def ByType app
 

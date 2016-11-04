@@ -64,7 +64,7 @@ executable top-sensor-check
   build-depends:       base,typed,top
   default-language:    Haskell2010
 
-executable sensors
+executable top-sensors
   hs-source-dirs:      app
   main-is:             Sensor/sensors.hs
   other-modules:       Sensor.Model1
