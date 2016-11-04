@@ -17,7 +17,8 @@ main = do
   sensor cpuTemperature (seconds 10)
 
 -- t ::
-t = parseTemperature "More\nCPU Temp:    +33.0°C ...dsds"
+t = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
+
 -- t = "CPU Temp:    +33.0°C  (high = +80.0°C, hyst = +75.0°C)  sensor = diode" =~ "CPU Temp:[:blank:]+([+-][1..9][0..9]*[.][0..9]+)(.+)"
 
 -- Returns on CPU temperature (in Linux systems with 'sensors')
@@ -27,17 +28,17 @@ cpuTemperature = do
 
 -- TODO: return as Float
 parseTemperature :: String -> Maybe Int
-parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = str =~ "CPU Temp:[ ]+([+-][1-9][0-9]*[.][0-9]+)°C"
+parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = str =~ "Core 0:[ ]+([+-][1-9][0-9]*[.][0-9]+) C"
             in if length matches == 1
                then let n = head matches
                     in Just . round $ (read (if head n == '+' then tail n else n) :: Float)
                else Nothing
 
-sensor read minInterval = do
+sensor0 read minInterval = do
   r <- read
   print r
 
-sensor1 read minInterval = run $ \conn -> do
+sensor read minInterval = run $ \conn -> do
   let io = either (Left . show) Right <$> strictTry read
   let out v = when (isRight v) $ output conn (fromRight v)
   let loop v = do
