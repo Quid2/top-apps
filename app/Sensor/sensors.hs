@@ -12,16 +12,17 @@ import           System.IO
 import           System.Process
 import           Text.Regex.TDFA
 
+t = recordType def (Proxy::Proxy Int)
+
 main = do
   forkIO $ sensor currentTime (milliseconds 500)
   sensor cpuTemperature (seconds 10)
 
 -- t ::
-t = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
+p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
 
--- t = "CPU Temp:    +33.0°C  (high = +80.0°C, hyst = +75.0°C)  sensor = diode" =~ "CPU Temp:[:blank:]+([+-][1..9][0..9]*[.][0..9]+)(.+)"
-
--- Returns on CPU temperature (in Linux systems with 'sensors')
+-- Returns CPU temperature (in Linux systems with working 'sensors')
+cpuTemperature :: IO Int
 cpuTemperature = do
   (ExitSuccess,out,err) <- readProcessWithExitCode "sensors" [] ""
   return . fromJust . parseTemperature $ out
@@ -53,6 +54,6 @@ sensor read minInterval = run $ \conn -> do
   loop v
 
 run app = do
-  threadDelay (seconds 30)
+  -- threadDelay (seconds 30)
   runClientForever def ByType app
 

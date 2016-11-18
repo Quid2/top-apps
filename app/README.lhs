@@ -40,11 +40,11 @@ The `sensor` program has barely changed:
 and similarly `sensor-check`:
 !source top-apps:app/Sensor/sensor-check1.hs
 
-So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us. 
+So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us.
 
-But what if we have more than one kind of sensors or if our sensors are in different locations, maybe a temperature sensor at home and a humidity sensor in the allotment garden? 
+But what if we have more than one kind of sensors or if our sensors are in different locations, maybe a temperature sensor at home and a humidity sensor in the allotment garden?
 
-More importantly, what if our friends also want to access their sensors? 
+More importantly, what if our friends also want to access their sensors?
 
 There might be some value in a versatile and open distributed sensor network but to support it we need a much richer and shareable model that others might be willing to adopt.
 
@@ -58,7 +58,7 @@ The more you reuse existing concepts, the greater the value of your data and pro
 
 It's all fine and dandy till you receive a fire alarm and run to your house just to discover that your friend Bob, a notorious prankster, has sent you fake readings pretending to be your faithful temperature sensor.
 
-Remember, quid2-net channels are public, anyone can send anything.
+Remember, *Top* channels are public, anyone can send anything.
 
 A simple way to establish provenance, is to sign your values.
 
@@ -75,15 +75,21 @@ Then one or more types to represent specific signature algorithms, for example [
 -- |An Ed255619 signature
 data Ed255619 = Ed255619 [Word8] deriving (Eq, Ord, Read, Show, Generic)
 ```
-By embedding our values in `Signed Ed255619`, we can avoid being pranked again. 
+By embedding our values in `Signed Ed255619`, we can avoid being pranked again.
 
 For an example, see [`signed`](app/signed.hs).
 
 As a bonus, this will also guarantee the messages' integrity, if anyone had tampered with them in any way, the signature won't match.
 
- #### And so on ...
-
 A similar procedure can be followed to add encryption, data compression or any other required feature in a flexible, autonomous and incremental way.
+
+ #### Meta Services
+
+Rather than adding these extra features on a case by case way, we can also implement 'Meta' services that add a specific feature for all possible types.
+
+For an example see:
+
+!source top-apps:app/meta.hs
 
  #### Examples
 
@@ -96,6 +102,8 @@ Have a look at some examples of clients/bots:
    * Basic end-user client (multiple channels, usage of Pipes). 
 * [`signed`](app/signed.hs)
    * Using cryptographic signatures to establish provenance and preserve data integrity
+* [`meta`](app/meta.hs)
+   * Simple meta protocol, stores the latest value of any type and returns it on request
 
 To run the corresponding executable from command line:
 `stack exec top-<example_name>`

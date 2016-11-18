@@ -137,11 +137,11 @@ main = runClientForever def ByType loop
 ```
 [Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check1.hs)
 
-So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us. 
+So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us.
 
-But what if we have more than one kind of sensors or if our sensors are in different locations, maybe a temperature sensor at home and a humidity sensor in the allotment garden? 
+But what if we have more than one kind of sensors or if our sensors are in different locations, maybe a temperature sensor at home and a humidity sensor in the allotment garden?
 
-More importantly, what if our friends also want to access their sensors? 
+More importantly, what if our friends also want to access their sensors?
 
 There might be some value in a versatile and open distributed sensor network but to support it we need a much richer and shareable model that others might be willing to adopt.
 
@@ -155,7 +155,7 @@ The more you reuse existing concepts, the greater the value of your data and pro
 
 It's all fine and dandy till you receive a fire alarm and run to your house just to discover that your friend Bob, a notorious prankster, has sent you fake readings pretending to be your faithful temperature sensor.
 
-Remember, quid2-net channels are public, anyone can send anything.
+Remember, *Top* channels are public, anyone can send anything.
 
 A simple way to establish provenance, is to sign your values.
 
@@ -172,15 +172,125 @@ Then one or more types to represent specific signature algorithms, for example [
 -- |An Ed255619 signature
 data Ed255619 = Ed255619 [Word8] deriving (Eq, Ord, Read, Show, Generic)
 ```
-By embedding our values in `Signed Ed255619`, we can avoid being pranked again. 
+By embedding our values in `Signed Ed255619`, we can avoid being pranked again.
 
 For an example, see [`signed`](app/signed.hs).
 
 As a bonus, this will also guarantee the messages' integrity, if anyone had tampered with them in any way, the signature won't match.
 
-#### And so on ...
-
 A similar procedure can be followed to add encryption, data compression or any other required feature in a flexible, autonomous and incremental way.
+
+#### Meta Services
+
+Rather than adding these extra features on a case by case way, we can also implement 'Meta' services that add a specific feature for all possible types.
+
+For an example see:
+
+```haskell
+{-# LANGUAGE DeriveAnyClass  #-}
+{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE TemplateHaskell #-}
+import           Chat.Model         (Message)
+import           Control.Concurrent
+import           Data.IORef
+import qualified Data.Map           as M
+import           Network.Top
+import           Repo.Disk
+import qualified Repo.Types         as R
+
+{-
+A simple meta protocol: store the latest value of any type sent via Top and returns it on request.
+-}
+
+-- The data type that represents the meta protocol
+data LastValueProtocol =
+  AskLastValue AbsType                      -- Ask for the last value of the given type
+  | LastValue AbsType (BLOB FlatEncoding)   -- Return the last value (flat-encoded)
+  deriving (Eq, Ord, Show, Generic, Flat, Model)
+
+-- We run this only once to register our protocol type
+r = recordType def (Proxy :: Proxy (LastValueProtocol))
+
+
+-- Example client
+-- Retrieve last Chat message
+
+-- We are only interested in receiving LastValue messages so we use a pattern to filter out this particular constructor
+client = do
+  -- First we send a value of type String
+  runClient def ByType $ \conn -> output conn "Just testing!"
+
+  -- Then we retrieve it using the LastValue service
+  runClient def $(byPattern [p|LastValue _ _|]) $ \conn -> do
+    output conn $ AskLastValue stringType
+    LastValue absType value <- input conn
+    putStrLn $ "Got it: " ++ show ((unflat . unblob $ value) :: Decoded String)
+
+stringType = absType (Proxy :: Proxy String)
+messageType = absType (Proxy :: Proxy Message)
+
+
+-- The service
+
+-- The service state, a map from types to the last value seen of that type
+-- For simplicity we just keep in memory
+-- We put it into a IORef so that we can share it across threads
+type State = IORef (M.Map AbsType (BLOB FlatEncoding))
+
+main = do
+  logLevel DEBUG
+
+  state <- newIORef M.empty
+
+  -- We run two Top connections on separate threads:
+
+  -- The first connection listen for all values exchanged on Top
+  -- and stores the last one of every type
+
+  -- We connect using ByAny that will return values of any type
+  forkIO $ runClient def ByAny $ \conn -> forever $ do
+
+    -- As the value received can be of any type
+    -- it comes as a TypedBLOB, a combination of the type and the binary encoding of the value
+    TypedBLOB msgType msgBody <- input conn
+
+    -- show what we got
+    -- this shows the unique reference (basically the hash code) of the type
+    dbgS (show msgType)
+
+    -- this shows the actual type definition (if the type has been registered)
+    -- dbgType msgType
+
+    -- store it in the state
+    modifyIORef' state (M.insert msgType msgBody)
+
+
+  -- The second connection interprets the protocol commands
+  -- returning on request the last value detected for every type
+  runClient def ByType $ \conn -> forever $ do
+
+    cmd <- input conn
+    --dbgS (show cmd)
+
+    case cmd of
+      AskLastValue t -> (M.lookup t <$> readIORef state) >>= mapM_ (output conn . LastValue t)
+      _ -> return ()
+
+
+-- Display the definition of a type (if the type is not registered it can be quite slow)
+dbgType t = do
+  -- Persistent local repository for type definitions
+  repo <- dbRepo "/tmp"
+
+  solveType repo def t >>= dbgS . take 200 . prettyShow
+
+  R.close repo
+
+x = do
+  logLevel DEBUG
+  dbgType $ absType (Proxy :: Proxy [Bool])
+```
+[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/meta.hs)
 
 #### Examples
 
@@ -193,6 +303,8 @@ Have a look at some examples of clients/bots:
    * Basic end-user client (multiple channels, usage of Pipes). 
 * [`signed`](app/signed.hs)
    * Using cryptographic signatures to establish provenance and preserve data integrity
+* [`meta`](app/meta.hs)
+   * Simple meta protocol, stores the latest value of any type and returns it on request
 
 To run the corresponding executable from command line:
 `stack exec top-<example_name>`
