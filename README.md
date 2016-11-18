@@ -51,7 +51,7 @@ main = runClientForever def ByType loop
 readSensor :: IO Int
 readSensor = return 15
 ```
-[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor0.hs)
+<sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor0.hs)</sup>
 
 We will also need a `sensor-check` program to collect the data and print it out: 
 
@@ -69,7 +69,7 @@ main = runClientForever def (ByType::ByType Int) loop
          loop conn
 
 ```
-[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check0.hs)
+<sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check0.hs)</sup>
 
 It could not be easier than this.
 
@@ -93,7 +93,7 @@ import Data.Typed
 data MySensor = MySensor Int -- These are Celsius by the way!
               deriving (Eq, Ord, Read, Show, Generic, Flat, Model)
 ```
-[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/Model1.hs)
+<sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/Model1.hs)</sup>
 
 Our data type needs to be an instance of the *Flat* (serialisation) and *Model* (introspection) classes, the instances are automatically derived, provided that the type derives `Generic`.
 
@@ -116,7 +116,7 @@ main = runClientForever def ByType loop
 readSensor :: IO MySensor
 readSensor = return $ MySensor 15
 ```
-[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor1.hs)
+<sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor1.hs)</sup>
 
 and similarly `sensor-check`:
 ```haskell
@@ -135,7 +135,7 @@ main = runClientForever def ByType loop
          loop conn
 
 ```
-[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check1.hs)
+<sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor-check1.hs)</sup>
 
 So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us.
 
@@ -209,12 +209,9 @@ data LastValueProtocol =
   deriving (Eq, Ord, Show, Generic, Flat, Model)
 
 -- We run this only once to register our protocol type
-r = recordType def (Proxy :: Proxy (LastValueProtocol))
-
+register = recordType def (Proxy :: Proxy (LastValueProtocol))
 
 -- Example client
--- Retrieve last Chat message
-
 -- We are only interested in receiving LastValue messages so we use a pattern to filter out this particular constructor
 client = do
   -- First we send a value of type String
@@ -228,7 +225,6 @@ client = do
 
 stringType = absType (Proxy :: Proxy String)
 messageType = absType (Proxy :: Proxy Message)
-
 
 -- The service
 
@@ -281,16 +277,10 @@ main = do
 dbgType t = do
   -- Persistent local repository for type definitions
   repo <- dbRepo "/tmp"
-
   solveType repo def t >>= dbgS . take 200 . prettyShow
-
   R.close repo
-
-x = do
-  logLevel DEBUG
-  dbgType $ absType (Proxy :: Proxy [Bool])
 ```
-[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/meta.hs)
+<sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/meta.hs)</sup>
 
 #### Examples
 

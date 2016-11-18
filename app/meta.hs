@@ -20,12 +20,9 @@ data LastValueProtocol =
   deriving (Eq, Ord, Show, Generic, Flat, Model)
 
 -- We run this only once to register our protocol type
-r = recordType def (Proxy :: Proxy (LastValueProtocol))
-
+register = recordType def (Proxy :: Proxy (LastValueProtocol))
 
 -- Example client
--- Retrieve last Chat message
-
 -- We are only interested in receiving LastValue messages so we use a pattern to filter out this particular constructor
 client = do
   -- First we send a value of type String
@@ -39,7 +36,6 @@ client = do
 
 stringType = absType (Proxy :: Proxy String)
 messageType = absType (Proxy :: Proxy Message)
-
 
 -- The service
 
@@ -92,11 +88,5 @@ main = do
 dbgType t = do
   -- Persistent local repository for type definitions
   repo <- dbRepo "/tmp"
-
   solveType repo def t >>= dbgS . take 200 . prettyShow
-
   R.close repo
-
-x = do
-  logLevel DEBUG
-  dbgType $ absType (Proxy :: Proxy [Bool])
