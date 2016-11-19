@@ -124,8 +124,3 @@ Start with:
  ### Compatibility
 
 Tested with [ghc](https://www.haskell.org/ghc/) 7.10.3 and 8.0.1.
-
-
-<!--
-Install as part of the [quid2](https://github.com/tittoassini/quid2) project.
--->
