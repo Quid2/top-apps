@@ -1,28 +1,12 @@
 resolver: lts-6.22
-#resolver: lts-7.4
+#resolver: lts-7.12
 
 packages:
 - .
-#- ../flat
-#- ../model
-#- ../typed
-#- ../top
-- location:
-    git: https://github.com/tittoassini/top
-    commit: 618fcab4c1bd87008f14ef1f199a5dee795f7045
-  extra-dep: true
-- location:
-    git: https://github.com/tittoassini/typed
-    commit: 00b39b1e94dc2a047e6371a1622c8ee411882efe
-  extra-dep: true
-- location:
-   git: https://github.com/tittoassini/flat
-   commit: 3771f5946dd506c6f199aa4047186d5b57bdce5f
-  extra-dep: true
-- location:
-   git: https://github.com/tittoassini/model
-   commit: b05a56a993213271e3b13d28a5e8bb90c9d8576f
-  extra-dep: true
+- ../flat
+- ../model
+- ../typed
+- ../top
 
 extra-deps:
 - ed25519-0.0.5.0

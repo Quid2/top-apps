@@ -17,6 +17,12 @@ cabal-version:       >=1.10
 --  main-is:             typed.hs
 --  build-depends:       base >= 4.7 && < 5,optparse-applicative,typed,top,containers
 --  default-language:    Haskell2010
+library
+  hs-source-dirs:      src
+  exposed-modules:     Data.Time.Util,Model.Report,Model.Report.Util,Quid2.Util.Dir,Quid2.Util.Service,Util
+  build-depends:       base,time,deepseq,bytestring,typed,top                     , hdaemonize
+                     , hslogger                     , directory                     , filepath                     , unix
+
 
 executable top-meta
   hs-source-dirs:      app
@@ -77,8 +83,23 @@ executable top-sensors
   main-is:             Sensor/sensors.hs
   other-modules:       Sensor.Model1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,typed,top,regex-tdfa,process,extra
+  build-depends:       base,typed,top,regex-tdfa,process,extra,top-apps
   default-language:    Haskell2010
+
+executable quid2-repo
+  hs-source-dirs:      app
+  main-is:             Repo.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  -- other-modules:       Repo.DB
+  build-depends:       base
+                     , bytestring
+                     , hslogger
+                     , text
+                     , containers,filepath,mtl,blaze-html,warp,wai,wai-extra,scotty
+                     , typed, top,ListLike,pretty,top-apps
+
+  default-language:    Haskell2010
+
 
 source-repository head
   type:     git
