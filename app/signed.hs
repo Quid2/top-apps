@@ -42,13 +42,10 @@ instance Flat Ed255619
 instance Model Ed255619
 
 sign :: Flat a => S.SecretKey -> a -> Ed255619
-sign secretKey a = Ed255619 (B.unpack . S.unSignature . S.dsign secretKey . bflat $ a)
+sign secretKey a = Ed255619 (B.unpack . S.unSignature . S.dsign secretKey . flat $ a)
 
 verify :: Flat a => S.PublicKey -> a -> Ed255619 -> Bool
-verify publicKey a (Ed255619 sig) = S.dverify publicKey (bflat a) (S.Signature . B.pack $ sig)
-
-bflat = L.toStrict . flat
-
+verify publicKey a (Ed255619 sig) = S.dverify publicKey (flat a) (S.Signature . B.pack $ sig)
 
 -- To generate your own: printSignatures
 

@@ -12,31 +12,29 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 
--- executable typed
+-- executable zm
 --  hs-source-dirs:  app
---  main-is:             typed.hs
---  build-depends:       base >= 4.7 && < 5,optparse-applicative,typed,top,containers
+--  main-is:             zm.hs
+--  build-depends:       base >= 4.7 && < 5,optparse-applicative,zm,top,containers
 --  default-language:    Haskell2010
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Time.Util,Model.Report,Model.Report.Util,Quid2.Util.Dir,Quid2.Util.Service,Util
-  build-depends:       base,time,deepseq,bytestring,typed,top                     , hdaemonize
-                     , hslogger                     , directory                     , filepath                     , unix
-
+  exposed-modules:     Data.Time.Util,Model.Report,Model.Report.Util,Quid2.Util.Dir,Quid2.Util.Service
+  build-depends:       base,time,deepseq,bytestring,zm,top,directory,filepath,hslogger,hdaemonize,unix
 
 executable top-meta
   hs-source-dirs:      app
   main-is:             meta.hs
   other-modules:       Chat.Model
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,typed,top,containers
+  build-depends:       base,transformers,zm,top,containers
   default-language:    Haskell2010
 
 executable top-hello
   hs-source-dirs:      app
   main-is:             hello.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,typed,top
+  build-depends:       base,transformers,zm,top
   default-language:    Haskell2010
 
 executable top-chat
@@ -44,7 +42,7 @@ executable top-chat
   main-is:             Chat/chat.hs
   other-modules:       Chat.Model,Chat.Util
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,async,pipes,typed,top
+  build-depends:       base,transformers,async,pipes,zm,top
   default-language:    Haskell2010
 
 executable top-chat-history
@@ -52,14 +50,14 @@ executable top-chat-history
   main-is:             Chat/chat-history.hs
   other-modules:       Chat.Model
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,pipes,typed,top
+  build-depends:       base,transformers,pipes,zm,top
   default-language:    Haskell2010
 
 executable top-signed
   hs-source-dirs:      app
   main-is:             signed.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,transformers,bytestring,ed25519,typed,top
+  build-depends:       base,transformers,bytestring,ed25519,zm,top
   default-language:    Haskell2010
 
 executable top-sensor
@@ -67,7 +65,7 @@ executable top-sensor
   main-is:             Sensor/sensor1.hs
   other-modules:       Sensor.Model1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,typed,top
+  build-depends:       base,zm,top
   default-language:    Haskell2010
 
 executable top-sensor-check
@@ -75,7 +73,7 @@ executable top-sensor-check
   main-is:             Sensor/sensor-check1.hs
   other-modules:       Sensor.Model1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,typed,top
+  build-depends:       base,zm,top
   default-language:    Haskell2010
 
 executable top-sensors
@@ -83,20 +81,28 @@ executable top-sensors
   main-is:             Sensor/sensors.hs
   other-modules:       Sensor.Model1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,typed,top,regex-tdfa,process,extra,top-apps
+  build-depends:       base,zm,top,regex-tdfa,process,extra,hostname,time,top-apps
   default-language:    Haskell2010
+
+executable top-load
+  hs-source-dirs:      app,src
+  main-is:             LoadRepo.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base,zm,top,regex-tdfa,process,extra,hostname,time,top-apps
+  default-language:    Haskell2010
+
 
 executable quid2-repo
   hs-source-dirs:      app
   main-is:             Repo.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  -- other-modules:       Repo.DB
+  other-modules:       Util
   build-depends:       base
                      , bytestring
                      , hslogger
                      , text
                      , containers,filepath,mtl,blaze-html,warp,wai,wai-extra,scotty
-                     , typed, top,ListLike,pretty,top-apps
+                     , zm, top,ListLike,pretty,top-apps
 
   default-language:    Haskell2010
 

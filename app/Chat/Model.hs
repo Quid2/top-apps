@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module Chat.Model where
 
-import  Data.Typed
+import ZM
 
 -- Data model for a simple chat system
 data Message = Message {fromUser::User

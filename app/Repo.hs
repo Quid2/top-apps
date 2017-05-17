@@ -43,7 +43,7 @@ setup cfg = do
 
   db <- openDB (stateDir cfg)
 
-  async $ runAgent (agent db)
+  _ <- async $ runAgent (agent db)
 
   sapp :: Network.Wai.Application <- scottyApp $ do
      middleware logStdoutDev

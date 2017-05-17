@@ -6,39 +6,49 @@ import           Data.Either
 import           Data.Either.Extra
 import           Data.Maybe
 import           Data.Time.Util
+import           Network.HostName
 import           Network.Top
+import           Sensor.Model
 import           System.Exit
-import           System.IO
+--import           System.IO
 import           System.Process
 import           Text.Regex.TDFA
 
-t = recordType def (Proxy::Proxy Int)
+r = do
+  recordType def (Proxy::Proxy (SensorReading Celsius String))
 
 main = do
   forkIO $ sensor currentTime (milliseconds 500)
-  sensor cpuTemperature (seconds 10)
+  sensor localTemperature (seconds 10)
 
--- t ::
 p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
 
+localTemperature = do
+  temp <- cpuTemperature
+  place <- getHostName
+  return $ SensorReading temp place
+
 -- Returns CPU temperature (in Linux systems with working 'sensors')
-cpuTemperature :: IO Int
+cpuTemperature :: IO Celsius
 cpuTemperature = do
   (ExitSuccess,out,err) <- readProcessWithExitCode "sensors" [] ""
-  return . fromJust . parseTemperature $ out
+  return . Celsius . fromJust . parseTemperature $ out
+  -- return $ Celsius 33.3
 
--- TODO: return as Float
-parseTemperature :: String -> Maybe Int
+parseTemperature :: String -> Maybe Float
 parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = str =~ "Core 0:[ ]+([+-][1-9][0-9]*[.][0-9]+) C"
             in if length matches == 1
                then let n = head matches
-                    in Just . round $ (read (if head n == '+' then tail n else n) :: Float)
+                    in Just (read (if head n == '+' then tail n else n) :: Float)
                else Nothing
 
 sensor0 read minInterval = do
   r <- read
   print r
 
+sensor
+  :: (NFData a, Flat a, Model a, Show a, Eq a) =>
+     IO a -> Int -> IO ()
 sensor read minInterval = run $ \conn -> do
   let io = either (Left . show) Right <$> strictTry read
   let out v = when (isRight v) $ output conn (fromRight v)
@@ -48,8 +58,8 @@ sensor read minInterval = run $ \conn -> do
             when (v1 /= v) $ out v1
             loop v1
 
-
   v <- io
+  -- print v
   out v
   loop v
 

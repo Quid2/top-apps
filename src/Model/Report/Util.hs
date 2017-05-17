@@ -3,7 +3,7 @@ module Model.Report.Util(
   --getByType,getServerState
   reportURL,printReport,byAnyReport,byTypeReport,byPatternReport
   ) where
-import Data.Typed
+import ZM
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import Model.Report
@@ -13,31 +13,29 @@ import Network.Top.Types(Config(..),def,cfgIP,cfgPort)
 
 reportURL cfg = concat["http://",cfgIP cfg,":",show (cfgPort cfg),"/report"]
 
-bytes = L.unpack . unblob
+bytes = B.unpack . unblob
 
-byAnyReport st = let [ByAnyReport vs] = byAnyReport_ st
-                 in vs
+byAnyReport = concatMap (\(ByAnyReport vs) -> vs) . byAnyReport_
 
 byAnyReport_ (NestedReport n (TypedBLOB t b) ss) =
    if (t == byAnyReportType)
    then [dec (bytes b)::ByAnyReport]
    else concatMap byAnyReport_ ss
 
-byTypeReport st = let [ByTypeReport vs] = byTypeReport_ st
-                  in vs
+byTypeReport = concatMap (\(ByTypeReport vs) -> vs) . byTypeReport_
 
 byTypeReport_ (NestedReport n (TypedBLOB t b) ss) =
    if (t == byTypeReportType)
-   then [dec (bytes b)::ByTypeReport]
+   then [dec (bytes b)::ByTypeReport] 
    else concatMap byTypeReport_ ss
 
-byPatternReport st = let [ByPatternReport vs] = byPatternReport_ st
-                     in vs
+-- Scan NestedReport for ByPatternReport 
+byPatternReport = concatMap (\(ByPatternReport vs) -> vs) . byPatternReport_
 
 byPatternReport_ (NestedReport n (TypedBLOB t b) ss) =
    if (t == byPatternReportType)
-   then [dec (bytes b)::ByPatternReport]
-   else concatMap byPatternReport_ ss
+   then [dec (bytes b)::ByPatternReport] -- found
+   else concatMap byPatternReport_ ss    -- we keep searching
 
 printReport (NestedReport n (TypedBLOB t b) ss) = do
   let bs = bytes b
@@ -51,7 +49,7 @@ printReport (NestedReport n (TypedBLOB t b) ss) = do
   when (t == echoReportType) $ print (dec bs::[ClientReport])
   mapM_ printReport ss
 
-dec bs = let Right a = unflat (L.pack bs) in a
+dec bs = let Right a = unflat bs in a
 
 warpReportType = absType (Proxy::Proxy WarpReport)
 stringType = absType (Proxy::Proxy String)

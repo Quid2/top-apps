@@ -1,11 +1,11 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric ,DeriveAnyClass #-}
 -- Data model for reports returned by the quid2.net's Top router
 module Model.Report (NestedReport(..),WarpReport(..),ByAnyReport(..),ByTypeReport(..),ByPatternReport(..),ClientReport(..),Time(..)) where
 import Data.Time.Util
-import Data.Time.Clock
-import Data.Typed
+-- import Data.Time.Clock
+import ZM
 import Data.Word
-import Data.Pattern.Types
+import Data.Pattern
 
 data WarpReport = WarpReport {
   version::String
@@ -19,23 +19,20 @@ data WarpReport = WarpReport {
 instance Flat WarpReport
 instance Model WarpReport
 
-data NestedReport a = NestedReport String a [NestedReport a] deriving (Eq,Ord,Show,Generic)
-instance Flat a => Flat (NestedReport a)
+data NestedReport a = NestedReport String a [NestedReport a] deriving (Eq,Ord,Show,Generic,Flat)
 instance Model a => Model (NestedReport a)
+--instance Flat a => Flat [NestedReport a]
 
-data ByAnyReport = ByAnyReport [ClientReport] deriving (Eq,Ord,Show,Generic)
-instance Flat ByAnyReport
+data ByAnyReport = ByAnyReport [ClientReport] deriving (Eq,Ord,Show,Generic,Flat)
 instance Model ByAnyReport
 
-data ByTypeReport = ByTypeReport [(AbsType,ClientReport)] deriving (Eq,Ord,Show,Generic)
-instance Flat ByTypeReport
+data ByTypeReport = ByTypeReport [(AbsType,ClientReport)] deriving (Eq,Ord,Show,Generic,Flat)
 instance Model ByTypeReport
 
-data ByPatternReport = ByPatternReport [(AbsType,Pattern WildCard,ClientReport)] deriving (Eq,Ord,Show,Generic)
-instance Flat ByPatternReport
+data ByPatternReport = ByPatternReport [(AbsType,Pattern,ClientReport)] deriving (Eq,Ord,Show,Generic,Flat)
 instance Model ByPatternReport
 
-data ClientReport = ClientReport {clientID::Integer,clientStartTime::Time} deriving (Show,Eq,Ord,Generic)
-instance Flat ClientReport
+data ClientReport = ClientReport {clientID::Integer,clientStartTime::Time} deriving (Show,Eq,Ord,Generic,Flat)
 instance Model ClientReport
+
 

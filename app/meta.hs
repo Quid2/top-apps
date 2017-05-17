@@ -29,7 +29,7 @@ client = do
   runClient def ByType $ \conn -> output conn "Just testing!"
 
   -- Then we retrieve it using the LastValue service
-  runClient def $(byPattern [p|LastValue _ _|]) $ \conn -> do
+  runClient def (byPattern $(patternE [p|LastValue _ _|])) $ \conn -> do
     output conn $ AskLastValue stringType
     LastValue absType value <- input conn
     putStrLn $ "Got it: " ++ show ((unflat . unblob $ value) :: Decoded String)

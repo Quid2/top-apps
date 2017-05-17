@@ -1,7 +1,7 @@
 {-# Language DeriveGeneric ,DeriveAnyClass #-}
 module Sensor.Model1 where
 
-import Data.Typed
+import ZM
 
 -- A rather asinine data model
 data MySensor = MySensor Int -- These are Celsius by the way!

@@ -3,7 +3,7 @@ module Quid2.Util.Service(Config(..),initService,initServiceFull,fatalErr) where
 
 -- ,initProcess,initWebProcess
 
-import Data.Char
+-- import Data.Char
 import Data.Maybe
 import Data.List()
 import Control.Monad
@@ -14,7 +14,7 @@ import System.Log.Handler.Syslog
 import System.Posix
 import Control.Exception
 import System.Environment(getArgs,getProgName)
-import System.Exit
+-- import System.Exit
 import System.Posix.Daemonize
 import System.Log.Formatter
 import System.Log.Logger

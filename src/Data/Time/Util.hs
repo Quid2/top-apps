@@ -8,8 +8,8 @@ import           Data.Time.Format
 import Data.Time.Calendar
 import Data.Word
 import GHC.Generics
-import Data.Typed
-import Control.DeepSeq
+import ZM
+-- import Control.DeepSeq
 
 timeDateTime :: IO String
 timeDateTime = timeF stdTimeF
