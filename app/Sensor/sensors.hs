@@ -17,7 +17,7 @@ import           Text.Regex.TDFA
 r = do
   recordType def (Proxy::Proxy (SensorReading Celsius String))
 
--- t = sensor currentTime (milliseconds 500)
+t = sensor currentTime (milliseconds 500)
 
 main = do
   forkIO $ sensor currentTime (milliseconds 500)
@@ -27,16 +27,18 @@ p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
 
 localTemperature = do
   print "localTemperature"
-  temp <- cpuTemperature
-  print temp
   place <- getHostName
   print place
+  temp <- cpuTemperature
+  print temp
   return $ SensorReading temp place
 
 -- Returns CPU temperature (in Linux systems with working 'sensors')
 cpuTemperature :: IO Celsius
 cpuTemperature = do
   (ExitSuccess,out,err) <- readProcessWithExitCode "sensors" [] ""
+  print out
+  print err
   return . Celsius . fromJust . parseTemperature $ out
   -- return $ Celsius 33.3
 
@@ -65,7 +67,7 @@ sensor read minInterval = run $ \conn -> do
             loop v1
 
   v <- io
-  -- print v
+  print v
   out v
   loop v
 
