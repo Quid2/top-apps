@@ -17,6 +17,8 @@ import           Text.Regex.TDFA
 r = do
   recordType def (Proxy::Proxy (SensorReading Celsius String))
 
+-- t = sensor currentTime (milliseconds 500)
+
 main = do
   forkIO $ sensor currentTime (milliseconds 500)
   sensor localTemperature (seconds 10)
@@ -25,7 +27,9 @@ p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
 
 localTemperature = do
   temp <- cpuTemperature
+  print temp
   place <- getHostName
+  print place
   return $ SensorReading temp place
 
 -- Returns CPU temperature (in Linux systems with working 'sensors')
