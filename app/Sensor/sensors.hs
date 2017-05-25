@@ -26,6 +26,7 @@ main = do
 p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
 
 localTemperature = do
+  print "localTemperature"
   temp <- cpuTemperature
   print temp
   place <- getHostName
@@ -59,6 +60,7 @@ sensor read minInterval = run $ \conn -> do
   let loop v = do
             threadDelay minInterval
             v1 <- io
+            print v1
             when (v1 /= v) $ out v1
             loop v1
 
