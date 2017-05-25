@@ -3,7 +3,7 @@ import Network.Top
 
 import Sensor.Model1
 
-main = runClientForever def ByType loop
+main = runAppForever def ByType loop
      where
        loop conn = do
         reading <- readSensor

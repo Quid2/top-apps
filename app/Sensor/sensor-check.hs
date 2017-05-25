@@ -2,7 +2,7 @@
 import Network.Top
 
 -- |Send a sensor reading every few minutes
-main = runClientForever def ByType loop
+main = runAppForever def ByType loop
      where
        loop conn = do
         reading <- readSensor
@@ -17,7 +17,7 @@ readSensor = return $ MySensor 15
 readSensor2 :: IO (SensorReading Measure GoogleMapsLocation)
 readSensor2 = return $ SensorReading (TemperatureInCelsius 15) (GoogleMapsLocation "Via+Francesco+Bocchi,+22,+50126+Firenze")
 
-mainPrinter = runClientForever def (ByType :: ByType MySensor) loop
+mainPrinter = runAppForever def (ByType :: ByType MySensor) loop
      where
        loop conn = input conn >>= print >> loop conn
 

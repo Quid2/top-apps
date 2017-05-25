@@ -2,7 +2,7 @@
 import Network.Top
 
 -- |Collect sensor data and give warnings if needed
-main = runClientForever def (ByType::ByType Int) loop
+main = runAppForever def (ByType::ByType Int) loop
      where
        loop conn = do
          temperature :: Int <- input conn

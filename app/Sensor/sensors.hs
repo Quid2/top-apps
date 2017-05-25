@@ -65,5 +65,5 @@ sensor read minInterval = run $ \conn -> do
 
 run app = do
   -- threadDelay (seconds 30)
-  runClientForever def ByType app
+  runAppForever def ByType app
 

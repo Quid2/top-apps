@@ -4,7 +4,7 @@
 import Network.Top
 
 {-
-runClientForever opens a connection to a Top channel and keeps it alive even across transient network failures.
+runAppForever opens a connection to a Top channel and keeps it alive even across transient network failures.
 
 The parameters are:
 def:
@@ -19,7 +19,7 @@ loop:
 The application code, it is passed the connection as soon as it is opened.
 It uses `output` to send out the sensor reading.
 -}
-main = runClientForever def ByType loop
+main = runAppForever def ByType loop
      where
        -- |The sensor reading loop
        loop conn = do

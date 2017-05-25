@@ -51,15 +51,15 @@ main = do
     -- the subject of our interest and its sub subjects:
     -- bySubject :: Pattern .. -> Pattern ..
     --let bySubject = $(filterPatternQ [p|Message _ (Subject subj) _|])
-    -- runClient def (byPattern (bySubject (prefixPattern subjL))) $ \conn -> do
+    -- runApp def (byPattern (bySubject (prefixPattern subjL))) $ \conn -> do
     -- NOTE: this is not implemented yet
 
-     outputMode subj = runClient def ByType $ \conn ->
+     outputMode subj = runApp def ByType $ \conn ->
        -- Asynchronously, receive messages and display them
        -- We use a simple pipe, to get a message from the connection (pipeIn) and print it
         void $ execStateT (runEffect $ pipeIn conn >-> niceMessage subj >-> for cat (liftIO . putStrLn)) (ChatState False)
 
-     inputMode subj = runClient def ByType $ \conn -> do
+     inputMode subj = runApp def ByType $ \conn -> do
        user <- getName
 
        putStrLn $ unlines [""

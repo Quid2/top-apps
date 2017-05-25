@@ -91,7 +91,7 @@ main = do
   recordType def (Proxy::Proxy ( SocketAddress () ))
   recordType def (Proxy::Proxy ( SensorReading () () ))
   recordType def (Proxy::Proxy ( Subject  ))
-  recordType def (Proxy::Proxy ( WildCard  ))
+  -- recordType def (Proxy::Proxy ( WildCard  ))
   recordType def (Proxy::Proxy ( Time  ))
   recordType def (Proxy::Proxy ( UnicodeLetterOrNumberOrLine  ))
   recordType def (Proxy::Proxy ( UTF8Encoding  ))

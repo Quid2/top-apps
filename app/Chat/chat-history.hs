@@ -22,7 +22,7 @@ main = do
   -- Display messages sent and received
   logLevel DEBUG
 
-  runClientForever def ByType $ \conn ->
+  runAppForever def ByType $ \conn ->
     execStateT (runEffect $ pipeIn conn >-> historyAgent >-> pipeOut conn) []
 
    where

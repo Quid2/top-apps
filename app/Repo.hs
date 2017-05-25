@@ -34,7 +34,7 @@ import           Web.Scotty
 
 u= recordType def (Proxy::Proxy RepoProtocol)
 
-main = initService "quid2-repo" setup
+main = initService "top-repo" setup
 
 setup :: Quid2.Util.Service.Config () -> IO ()
 setup cfg = do
@@ -77,7 +77,7 @@ setup cfg = do
 
       agent db = do
         msg <- await
-        dbg  ["MSG",show msg]
+        dbg  ["MSG",take 100 $ show msg]
         case msg of
           Record adt -> do
             --dbg ["Record",prettyShow (refS adt),show (refS adt),prettyShow adt]
@@ -142,7 +142,7 @@ setup cfg = do
 
 inDB db rs = lift $ (\(ps,as) -> (map (second fromJust) ps,map fst as)) . partition (isJust . snd) <$> mapM (\r -> (r,) <$> getDB db r) rs
 
-runAgent agent = runClientForever def ByType $ \conn -> runEffect $ pipeIn conn >-> agent >-> pipeOut conn
+runAgent agent = runAppForever def ByType $ \conn -> runEffect $ pipeIn conn >-> agent >-> pipeOut conn
 
 -- pp = head . toList . snd . head . M.elems . snd $ absTypeEnv (Proxy :: Proxy (Bool))
 ppr = render . pPrint

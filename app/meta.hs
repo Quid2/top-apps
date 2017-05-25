@@ -26,10 +26,10 @@ register = recordType def (Proxy :: Proxy (LastValueProtocol))
 -- We are only interested in receiving LastValue messages so we use a pattern to filter out this particular constructor
 client = do
   -- First we send a value of type String
-  runClient def ByType $ \conn -> output conn "Just testing!"
+  runApp def ByType $ \conn -> output conn "Just testing!"
 
   -- Then we retrieve it using the LastValue service
-  runClient def (byPattern $(patternE [p|LastValue _ _|])) $ \conn -> do
+  runApp def (byPattern $(patternE [p|LastValue _ _|])) $ \conn -> do
     output conn $ AskLastValue stringType
     LastValue absType value <- input conn
     putStrLn $ "Got it: " ++ show ((unflat . unblob $ value) :: Decoded String)
@@ -55,7 +55,7 @@ main = do
   -- and stores the last one of every type
 
   -- We connect using ByAny that will return values of any type
-  forkIO $ runClient def ByAny $ \conn -> forever $ do
+  forkIO $ runApp def ByAny $ \conn -> forever $ do
 
     -- As the value received can be of any type
     -- it comes as a TypedBLOB, a combination of the type and the binary encoding of the value
@@ -74,7 +74,7 @@ main = do
 
   -- The second connection interprets the protocol commands
   -- returning on request the last value detected for every type
-  runClient def ByType $ \conn -> forever $ do
+  runApp def ByType $ \conn -> forever $ do
 
     cmd <- input conn
     --dbgS (show cmd)

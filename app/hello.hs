@@ -2,7 +2,7 @@
 import Network.Top
 
 -- |Send a message and then print out all messages received
-main = runClient def ByType $ \conn -> do
+main = runApp def ByType $ \conn -> do
   logLevel DEBUG
   output conn Message {fromUser="robin",content=TextMessage "Hello!"}
   loop conn

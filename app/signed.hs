@@ -15,7 +15,7 @@ main = do
   threadDelay (seconds 3)
   cancel readerTask
 
-reader = runClient def (ByType::ByType (Signed String Ed255619)) loop
+reader = runApp def (ByType::ByType (Signed String Ed255619)) loop
       where loop conn = do
               Signed value signature <- input conn
               let sender = if verify johnPublicKey value signature then "John" else "Some random guy"
@@ -23,11 +23,11 @@ reader = runClient def (ByType::ByType (Signed String Ed255619)) loop
               loop conn
 
 -- This is really John
-john = runClient def ByType $ \conn -> let msg = "Hi from John!"
+john = runApp def ByType $ \conn -> let msg = "Hi from John!"
                                         in output conn (Signed msg (sign johnSecretKey msg))
 
 -- This is the infamous prankster Bob, impersonating John
-bob = runClient def ByType $ \conn -> let msg = "Hi from John!"
+bob = runApp def ByType $ \conn -> let msg = "Hi from John!"
                                       in output conn (Signed msg (sign bobSecretKey msg))
 
 -- |A signed value
