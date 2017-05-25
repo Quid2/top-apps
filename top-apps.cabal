@@ -95,7 +95,7 @@ executable top-load
 
 executable top-repo
   hs-source-dirs:      app
-  main-is:             repo.hs
+  main-is:             adtrepo.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   other-modules:       Util
   build-depends:       base
