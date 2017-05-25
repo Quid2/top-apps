@@ -7,7 +7,7 @@ import           Data.Either.Extra
 import           Data.Maybe
 import           Data.Time.Util
 import           Network.HostName
-import           Network.Top
+import           Network.Top hiding (dbg)
 import           Sensor.Model
 import           System.Exit
 --import           System.IO
@@ -26,19 +26,19 @@ main = do
 p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
 
 localTemperature = do
-  print "localTemperature"
+  dbg "localTemperature"
   place <- getHostName
-  print place
+  dbg place
   temp <- cpuTemperature
-  print temp
+  dbg temp
   return $ SensorReading temp place
 
 -- Returns CPU temperature (in Linux systems with working 'sensors')
 cpuTemperature :: IO Celsius
 cpuTemperature = do
   (ExitSuccess,out,err) <- readProcessWithExitCode "sensors" [] ""
-  print out
-  print err
+  dbg out
+  dbg err
   return . Celsius . fromJust . parseTemperature $ out
   -- return $ Celsius 33.3
 
@@ -51,7 +51,7 @@ parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = 
 
 sensor0 read minInterval = do
   r <- read
-  print r
+  dbg r
 
 sensor
   :: (NFData a, Flat a, Model a, Show a, Eq a) =>
@@ -62,12 +62,12 @@ sensor read minInterval = run $ \conn -> do
   let loop v = do
             threadDelay minInterval
             v1 <- io
-            print v1
+            dbg v1
             when (v1 /= v) $ out v1
             loop v1
 
   v <- io
-  print v
+  dbg v
   out v
   loop v
 
@@ -75,3 +75,6 @@ run app = do
   -- threadDelay (seconds 30)
   runAppForever def ByType app
 
+-- dbg = print
+dbg _ = return ()
+  
