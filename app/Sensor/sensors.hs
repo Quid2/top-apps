@@ -43,7 +43,7 @@ cpuTemperature = do
   -- return $ Celsius 33.3
 
 parseTemperature :: String -> Maybe Float
-parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = str =~ "Core 0:[ ]+([+-][1-9][0-9]*[.][0-9]+) C"
+parseTemperature str = let (_,_,_,matches) :: (String,String,String,[String]) = str =~ "Core 0:[ ]+([+-][1-9][0-9]*[.][0-9]+).C"
             in if length matches == 1
                then let n = head matches
                     in Just (read (if head n == '+' then tail n else n) :: Float)
