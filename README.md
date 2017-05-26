@@ -1,10 +1,10 @@
 
 Example applications, in Haskell, for [Top](https://github.com/tittoassini/top).
 
-Developing distributed applications that use *Top*, the typed transport protocol, is straightforward:
+Developing distributed applications that use *Top*, the type oriented protocol, is straightforward:
 * define a data model, that's just one or more serialisable Haskell data types
 * automatically derive instances of the *Flat* (serialisation) and *Model* (introspection) classes
-* connect to one or more typed channels and send/receive values and get in communication with any other client using the same types
+* connect to one or more typed channels and send/receive values to/from any other client using the same types
 
 #### Example: collecting data from distributed sensors
 
@@ -19,7 +19,7 @@ A `sensor` program that reads the temperature from a sensor and broadcast it usi
 import Network.Top
 
 {-
-runClientForever opens a connection to a Top channel and keeps it alive even across transient network failures.
+runAppForever opens a connection to a Top channel and keeps it alive even across transient network failures.
 
 The parameters are:
 def:
@@ -34,7 +34,7 @@ loop:
 The application code, it is passed the connection as soon as it is opened.
 It uses `output` to send out the sensor reading.
 -}
-main = runClientForever def ByType loop
+main = runAppForever def ByType loop
      where
        -- |The sensor reading loop
        loop conn = do
@@ -60,7 +60,7 @@ We will also need a `sensor-check` program to collect the data and print it out:
 import Network.Top
 
 -- |Collect sensor data and give warnings if needed
-main = runClientForever def (ByType::ByType Int) loop
+main = runAppForever def (ByType::ByType Int) loop
      where
        loop conn = do
          temperature :: Int <- input conn
@@ -87,7 +87,7 @@ As it will need to be shared between the `sensor` and the `sensor-check` program
 {-# Language DeriveGeneric ,DeriveAnyClass #-}
 module Sensor.Model1 where
 
-import Data.Typed
+import ZM
 
 -- A rather asinine data model
 data MySensor = MySensor Int -- These are Celsius by the way!
@@ -105,7 +105,7 @@ import Network.Top
 
 import Sensor.Model1
 
-main = runClientForever def ByType loop
+main = runAppForever def ByType loop
      where
        loop conn = do
         reading <- readSensor
@@ -126,7 +126,7 @@ import Network.Top
 import Sensor.Model1
 
 -- |Collect sensor data and give warnings if needed
-main = runClientForever def ByType loop
+main = runAppForever def ByType loop
      where
        loop conn = do
          MySensor temperature <- input conn
@@ -215,10 +215,10 @@ register = recordType def (Proxy :: Proxy (LastValueProtocol))
 -- We are only interested in receiving LastValue messages so we use a pattern to filter out this particular constructor
 client = do
   -- First we send a value of type String
-  runClient def ByType $ \conn -> output conn "Just testing!"
+  runApp def ByType $ \conn -> output conn "Just testing!"
 
   -- Then we retrieve it using the LastValue service
-  runClient def $(byPattern [p|LastValue _ _|]) $ \conn -> do
+  runApp def (byPattern $(patternE [p|LastValue _ _|])) $ \conn -> do
     output conn $ AskLastValue stringType
     LastValue absType value <- input conn
     putStrLn $ "Got it: " ++ show ((unflat . unblob $ value) :: Decoded String)
@@ -244,7 +244,7 @@ main = do
   -- and stores the last one of every type
 
   -- We connect using ByAny that will return values of any type
-  forkIO $ runClient def ByAny $ \conn -> forever $ do
+  forkIO $ runApp def ByAny $ \conn -> forever $ do
 
     -- As the value received can be of any type
     -- it comes as a TypedBLOB, a combination of the type and the binary encoding of the value
@@ -263,7 +263,7 @@ main = do
 
   -- The second connection interprets the protocol commands
   -- returning on request the last value detected for every type
-  runClient def ByType $ \conn -> forever $ do
+  runApp def ByType $ \conn -> forever $ do
 
     cmd <- input conn
     --dbgS (show cmd)

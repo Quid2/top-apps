@@ -1,9 +1,9 @@
 Example applications, in Haskell, for [Top](https://github.com/tittoassini/top).
 
-Developing distributed applications that use *Top*, the typed transport protocol, is straightforward:
+Developing distributed applications that use *Top*, the type oriented protocol, is straightforward:
 * define a data model, that's just one or more serialisable Haskell data types
 * automatically derive instances of the *Flat* (serialisation) and *Model* (introspection) classes
-* connect to one or more typed channels and send/receive values and get in communication with any other client using the same types
+* connect to one or more typed channels and send/receive values to/from any other client using the same types
 
  #### Example: collecting data from distributed sensors
 
