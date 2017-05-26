@@ -53,7 +53,7 @@ readSensor = return 15
 ```
 <sup>[Source Code](https://github.com/tittoassini/top-apps/blob/master/app/Sensor/sensor0.hs)</sup>
 
-We will also need a `sensor-check` program to collect the data and print it out: 
+We will also need a `sensor-check` program to collect the data and print it out:
 
 ```haskell
 {-# LANGUAGE ScopedTypeVariables #-}
