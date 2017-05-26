@@ -23,7 +23,7 @@ main = do
   forkIO $ sensor currentTime (milliseconds 500)
   sensor localTemperature (seconds 10)
 
-p = parseTemperature "More\nCore 0:       +44.7 C  ...dsds"
+p = parseTemperature "More\nCore 0:       +44.7xC  ...dsds"
 
 localTemperature = do
   dbg "localTemperature"
