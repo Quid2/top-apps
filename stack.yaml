@@ -12,13 +12,14 @@ packages:
 # - location: ../zm
 #   extra-dep: true
 
-- location: ../top
-  extra-dep: true
+#- location: ../top
+#  extra-dep: true
 
 extra-deps:
 - model-0.3
 - flat-0.3
-- zm-0.2
+- zm-0.2.4
+- top-0.2
 - ed25519-0.0.5.0
 - mono-traversable-1.0.2
 - cryptonite-0.22
