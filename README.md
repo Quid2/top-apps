@@ -139,17 +139,20 @@ main = runAppForever def ByType loop
 
 So now we are transferring our data on the `MySensor` channel, that makes a bit more sense, at least to us.
 
-But what if we have more than one kind of sensors or if our sensors are in different locations, maybe a temperature sensor at home and a humidity sensor in the allotment garden?
 
-More importantly, what if our friends also want to access their sensors?
-
-There might be some value in a versatile and open distributed sensor network but to support it we need a much richer and shareable model that others might be willing to adopt.
-
-And here we come to the main point about *Top*: to facilitate large scale data exchange by progressively converging on a shared lexicon of data types.
+#### Sharing the Love (or at least the Type)
 
 Before inventing your own types you should check those [already defined](http://quid2.org/app/ui).
 
-The more you reuse existing concepts, the greater the value of your data and programs.
+The more you reuse existing concepts, the greater the chances that the data and services that you build upon them will be accessed and used by other people.
+
+If you have defined a new data type, you should share it by executing:
+
+```haskell
+recordType def (Proxy::Proxy MyNewWonderfulType)
+```haskell
+
+You need to do it only once per data type (all the data types referred by your data type will also be automatically permanently recorded) and, apart from making the world a better place, you get the ability of inspecting the traffic on your channel using the [top inspector](http://quid2.org/app/ui). Just open a connection on your type and select 'Show Values' in the [inspector](http://quid2.org/app/ui).
 
 #### Establish Provenance and Preserve Data Integrity
 
