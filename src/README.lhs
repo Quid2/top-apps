@@ -62,7 +62,7 @@ If you have defined a new data type, you should share it by executing:
 
 ```haskell
 recordType def (Proxy::Proxy MyNewWonderfulType)
-```haskell
+```
 
 You need to do it only once per data type (all the data types referred by your data type will also be automatically permanently recorded) and, apart from making the world a better place, you get the ability of inspecting the traffic on your channel using the [top inspector](http://quid2.org/app/ui). Just open a connection on your type and select 'Show Values' in the [inspector](http://quid2.org/app/ui).
 
