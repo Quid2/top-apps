@@ -61,4 +61,3 @@ chk (Left exp)           = Just (show exp)
 email title body fromGmail fromGmailPwd = do
   let from = fromGmail ++ "@gmail.com"
   sendGmail (fromString from) (fromString fromGmailPwd) (Address Nothing (fromString from)) [Address Nothing (fromString from)] [] [] (fromString title) (fromString body) [] (seconds 10)
-forever $ 
