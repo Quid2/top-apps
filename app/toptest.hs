@@ -28,7 +28,7 @@ main = do
     failedTests <- filter (isJust . snd) <$> runTests [testRepo,testSensors]
     when (length failedTests > 0) $
       email "TOP FAILURE" (show failedTests) gmail gmailPwd
-    threadDelay (seconds 6)
+    threadDelay (seconds 60)
 
 testSensors :: Test
 testSensors = Test "Sensors" 10 $ do
@@ -61,3 +61,4 @@ chk (Left exp)           = Just (show exp)
 email title body fromGmail fromGmailPwd = do
   let from = fromGmail ++ "@gmail.com"
   sendGmail (fromString from) (fromString fromGmailPwd) (Address Nothing (fromString from)) [Address Nothing (fromString from)] [] [] (fromString title) (fromString body) [] (seconds 10)
+forever $ 
