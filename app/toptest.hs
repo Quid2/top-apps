@@ -26,7 +26,7 @@ main = do
   [gmail,gmailPwd] <- getArgs
   forever $ do
     failedTests <- filter (isJust . snd) <$> runTests [testRepo,testSensors]
-    when (length failedTests > 0) $
+    when (not $ null failedTests) $
       email "TOP FAILURE" (show failedTests) gmail gmailPwd
     threadDelay (seconds 60)
 
