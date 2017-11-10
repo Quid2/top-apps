@@ -1,16 +1,16 @@
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 module Main where
 import           Control.Concurrent
+import           Data.Bifunctor
 import           Data.Either
-import           Data.Either.Extra
 import           Data.Maybe
 import           Data.Time.Util
 import           Network.HostName
-import           Network.Top hiding (dbg)
+import           Network.Top        hiding (dbg)
 import           Sensor.Model
 import           System.Exit
---import           System.IO
 import           System.Process
 import           Text.Regex.TDFA
 
@@ -53,12 +53,10 @@ sensor0 read minInterval = do
   r <- read
   dbg r
 
-sensor
-  :: (NFData a, Flat a, Model a, Show a, Eq a) =>
-     IO a -> Int -> IO ()
+sensor :: forall a. (NFData a, Flat a, Model a, Show a, Eq a) => IO a -> Int -> IO ()
 sensor read minInterval = run $ \conn -> do
-  let io = either (Left . show) Right <$> strictTry read
-  let out v = when (isRight v) $ output conn (fromRight v)
+  let io = first show <$> strictTry read
+  let out v = when (isRight v) $ output conn (let Right o = v in o)
   let loop v = do
             threadDelay minInterval
             v1 <- io
@@ -75,6 +73,7 @@ run app = do
   -- threadDelay (seconds 30)
   runAppForever def ByType app
 
+dbg = undefined
 -- dbg = print
-dbg _ = return ()
-  
+-- dbg _ = return ()
+
