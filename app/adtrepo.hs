@@ -42,65 +42,25 @@ import           ZM.To.ZMT                            (generate)
 import           ZM.Type.Repo
 import qualified ZM.Type.String                       as Z
 
-type LangChan = Function (Validate (SourceCode ZM)) [Note Z.String Range]
+data MyConfig =
+  MyConfig
+    { logPriority :: Priority
+    , logStdOut   :: Bool
+    }
+  deriving (Show, Read)
 
-type SolveChan = Function (Solve AbsRef AbsADT) (Maybe AbsADT) -- AbsADT)
+serviceName = "top-repo2"
 
--- Functions
-recordADTFun :: DB -> Record AbsADT -> IO ()
---recordADTFun db (Model.Function.Record adt) = recordADT db adt
-recordADTFun db (Record adt) = recordADT db adt
+main = initService serviceName setup
 
-{- |
->>> validateZMFun $ Validate (SourceCode ZM (Z.String "Bool == False \n| True"))
-
--}
--- Validate ZM data declarations, return errors if found
-validateZMFun :: Monad m => Validate (SourceCode ZM) -> m [Note Z.String Range]
-validateZMFun (Validate sc@(SourceCode ZM (Z.String s))) = return $ errs s
-  where
-    errs =
-      either
-        (map
-           (\lerr ->
-              let r = P.label lerr
-               in Note
-                    (Z.String (P.object lerr))
-                    (Range
-                       (Position (P.line r) (P.start r))
-                       (Position (P.line r) (P.end r)))))
-        (const []) .
-      P.parseADTs
-
--- solveRef :: DB -> (Solve AbsRef) -> IO (Either Z.String AbsADT)
-solveRefFun :: DB -> (Solve AbsRef AbsADT) -> IO AbsADT
-solveRefFun db (Solve ref) = do
-  madt <- getDB db ref
-  case madt of
-    Nothing  -> error $ unwords ["Unknown type", prettyShow ref]
-      -- return Left $ Z.String $ unwords ["Unknown type", prettyShow ref]
-    --Just adt -> Right $ Z.String $ prettyShow adt
-    Just adt -> return adt
-
---knownDataTypesFun :: DB -> AllKnown (AbsRef, AbsADT) -> IO [(AbsRef, AbsADT)]
-knownDataTypesFun :: DB -> AllKnown (AbsRef, AbsADT) -> IO [(AbsRef, AbsADT)]
-knownDataTypesFun db AllKnown = allAssocs db
-
-knownDataTypeRefsFun :: DB -> AllKnown (AbsRef, String) -> IO [(AbsRef, String)]
-knownDataTypeRefsFun db AllKnown
-  --map (second (Z.String . convert . declName)) <$> allAssocs db
- = map (second (convert . declName)) <$> allAssocs db
-
-allAssocs db = (\(DBState env) -> M.assocs env) <$> wholeDB db
-
-main :: IO ()
-main = initService "top-repo2" setup
-
-setup :: Quid2.Util.Service.Config () -> IO ()
-setup cfg
-  --updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO
- = do
-  logLevelOut DEBUG stdout
+setup :: Quid2.Util.Service.Config MyConfig -> IO ()
+setup cfg = do
+  let appCnf = appConf cfg
+  let logPriority_ = maybe DEBUG logPriority appCnf
+  let logStdOut_ = maybe True logStdOut appCnf
+  updateGlobalLogger rootLoggerName $ setLevel logPriority_
+  when logStdOut_ $ logLevelOut logPriority_ stdout
+  dbgS $ show cfg
   db <- openDB (stateDir cfg)
   readPreviousRepo db
   -- Channel Agents
@@ -175,6 +135,57 @@ wwwUI db = do
         -- table . mconcat . (tr (mconcat [th "Type(s)"]) :) . map (\(adtS,r) -> tr (td . toHtml $ a ! href (fromString $ "/type/"++ ppr r) $ toHtml adtS)) . sortBy (comparing fst) . map (\(r,adt) -> (adtName adt,r)) . M.toList $ db
      -- table . mconcat . (tr (mconcat [th "Types"]) :) . map (\(adtS,r) -> tr (td . toHtml $ a ! href (fromString $ "/type/"++ ppr r) $ toHtml adtS)) . sortBy (comparing fst) . map (\(r,adt) -> (adtName adt,r)) . M.toList $ db
     adtName = unwords . sort . map declName . toList
+
+type LangChan = Function (Validate (SourceCode ZM)) [Note Z.String Range]
+
+type SolveChan = Function (Solve AbsRef AbsADT) (Maybe AbsADT) -- AbsADT)
+
+-- Functions
+recordADTFun :: DB -> Record AbsADT -> IO ()
+--recordADTFun db (Model.Function.Record adt) = recordADT db adt
+recordADTFun db (Record adt) = recordADT db adt
+
+{- |
+>>> validateZMFun $ Validate (SourceCode ZM (Z.String "Bool == False \n| True"))
+
+-}
+-- Validate ZM data declarations, return errors if found
+validateZMFun :: Monad m => Validate (SourceCode ZM) -> m [Note Z.String Range]
+validateZMFun (Validate sc@(SourceCode ZM (Z.String s))) = return $ errs s
+  where
+    errs =
+      either
+        (map
+           (\lerr ->
+              let r = P.label lerr
+               in Note
+                    (Z.String (P.object lerr))
+                    (Range
+                       (Position (P.line r) (P.start r))
+                       (Position (P.line r) (P.end r)))))
+        (const []) .
+      P.parseADTs
+
+-- solveRef :: DB -> (Solve AbsRef) -> IO (Either Z.String AbsADT)
+solveRefFun :: DB -> (Solve AbsRef AbsADT) -> IO AbsADT
+solveRefFun db (Solve ref) = do
+  madt <- getDB db ref
+  case madt of
+    Nothing  -> error $ unwords ["Unknown type", prettyShow ref]
+      -- return Left $ Z.String $ unwords ["Unknown type", prettyShow ref]
+    --Just adt -> Right $ Z.String $ prettyShow adt
+    Just adt -> return adt
+
+--knownDataTypesFun :: DB -> AllKnown (AbsRef, AbsADT) -> IO [(AbsRef, AbsADT)]
+knownDataTypesFun :: DB -> AllKnown (AbsRef, AbsADT) -> IO [(AbsRef, AbsADT)]
+knownDataTypesFun db AllKnown = allAssocs db
+
+knownDataTypeRefsFun :: DB -> AllKnown (AbsRef, String) -> IO [(AbsRef, String)]
+knownDataTypeRefsFun db AllKnown
+  --map (second (Z.String . convert . declName)) <$> allAssocs db
+ = map (second (convert . declName)) <$> allAssocs db
+
+allAssocs db = (\(DBState env) -> M.assocs env) <$> wholeDB db
 
 recordADT db adt -- do
   --dbg ["Record",prettyShow (refS adt),show (refS adt),prettyShow adt]
