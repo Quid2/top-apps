@@ -105,7 +105,7 @@ sensor read minInterval =
     out v
     loop v
 
-runA app = runAppForever def ByType app
+runA = runAppForever def ByType
 -- run app = runApp def ByType app
 -- dbgShow = dbgS . show
 -- dbgSh = dbgS . show
