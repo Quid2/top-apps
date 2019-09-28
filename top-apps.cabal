@@ -1,53 +1,81 @@
 name:                top-apps
-version:             0.1.1
-synopsis:            Example applications for top, the typed oriented protocol.
-description:         Please see README.md
-homepage:            http://github.com/tittoassini/top-apps
-license:             OtherLicense
+version:             0.1.3
+synopsis:            Example applications for <http://github.com/Quid2/top top>, the typed oriented protocol.
+description:         See the <http://github.com/Quid2/top-apps online tutorial>.
+homepage:            http://github.com/Quid2/top-apps
+license:             BSD3
 license-file:        LICENSE
 author:              Pasqualino `Titto` Assini
 maintainer:          tittoassini@gmail.com
-copyright:           Copyright: (c) 2016 Pasqualino `Titto` Assini
-category:            Network
+copyright:           Copyright: (c) 2016-2017 Pasqualino `Titto` Assini
+category:            Network, Cloud, Distributed Computing
 build-type:          Simple
 cabal-version:       >=1.10
+Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2
+extra-source-files:
+    stack.yaml
+    stack710.yaml
+    stack802.yaml
+    stack822.yaml
+    README.md
 
--- executable zm
---  hs-source-dirs:  app
---  main-is:             zm.hs
---  build-depends:       base >= 4.7 && < 5,optparse-applicative,zm,top,containers
---  default-language:    Haskell2010
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Time.Util,Model.Report,Model.Report.Util,Quid2.Util.Dir,Quid2.Util.Service
-  build-depends:       base,time,deepseq,bytestring,zm,top,directory,filepath,hslogger,hdaemonize,unix
+  exposed-modules:     Data.Time.Util,Model.Report,Model.StoreProtocol,Model.Report.Util,Quid2.Util.Dir,Quid2.Util.Service
+  build-depends:       base
+                     , time
+                     , deepseq
+                     , bytestring
+                     , directory
+                     , filepath
+                     , hslogger
+                     , hdaemonize
+                     , unix
+                     , zm == 0.3.*
+                     , top >= 0.2.2 && < 0.3
+
   default-language:    Haskell2010
 
--- executable top-test
---   hs-source-dirs:      app
---   main-is:             toptest.hs
---   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
---   other-modules:       Util
---   build-depends:       base
---                      , bytestring
---                      , hslogger
---                      , text
---                      , smtps-gmail >= 1.3.2
---                      , mime-mail
---                      , zm,top,async,pretty,top-apps
---   default-language:    Haskell2010
-
-executable top-repo
+executable top-test
   hs-source-dirs:      app
-  main-is:             adtrepo.hs
+  main-is:             test.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   other-modules:       Util
   build-depends:       base
                      , bytestring
                      , hslogger
                      , text
+                     , HaskellNet-SSL
+                     , zm,top,async,pretty,top-apps
+  default-language:    Haskell2010
+
+executable top-repo2
+  hs-source-dirs:      app,src
+  main-is:             adtrepo.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  other-modules:       Util,Model.Validate Quid2.Util.Dir, Quid2.Util.Service
+  build-depends:       base
+                     , bytestring
+                     , hslogger
+                     , text
                      , containers,filepath,mtl,blaze-html,warp,wai,wai-extra,scotty
-                     , zm, top,ListLike,pretty,top-apps
+                     , zm, top,ListLike,pretty,top-apps, zm-language,directory,unix,hdaemonize
+  default-language:    Haskell2010
+
+executable top-store
+  hs-source-dirs:      app
+  main-is:             store.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  -- other-modules:       Util
+  build-depends:       base
+                     , bytestring
+                     , hslogger
+                     , directory
+                     , filepath
+                     , pretty
+                     , zm
+                     , top
+                     ,top-apps
   default-language:    Haskell2010
 
 executable top-meta
@@ -112,21 +140,53 @@ executable top-sensors
   build-depends:       base,zm,top,regex-tdfa,process,extra,hostname,time,top-apps
   default-language:    Haskell2010
 
-executable top-load
-  hs-source-dirs:      app,src
-  main-is:             LoadRepo.hs
-  other-modules:       Sensor.Model,Chat.Model,Data.Time.Util,Sensor.Model
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base,zm,top,regex-tdfa,process,extra,hostname,time,top-apps
-  default-language:    Haskell2010
-
--- executable top-generate
---   hs-source-dirs:      app,src
---   main-is:             typed.hs
---   --other-modules:       Sensor.Model,Chat.Model,Data.Time.Util,Sensor.Model
---   build-depends:       base,containers,zm,top,optparse-applicative>=0.12.1.0
+-- executable top-load
+--   hs-source-dirs:      other
+--   main-is:             LoadRepo.hs
+--   other-modules:       Sensor.Model,Chat.Model,Data.Time.Util,Sensor.Model
+--   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+--   build-depends:       base,zm,top,regex-tdfa,process,extra,hostname,time,top-apps
 --   default-language:    Haskell2010
+
+-- executable zm
+--   hs-source-dirs:    app
+--   main-is:           zmi.hs
+--   build-depends:     base
+--                    , containers
+--                    , optparse-applicative>=0.12.1.0
+--                    , xdg-basedir
+--                    , bytestring
+--                    , top
+--                    , top-apps
+--                    , zm
+--                    , zm-language
+--   default-language:  Haskell2010
+
+-- executable top-www
+--   hs-source-dirs:    app,src
+--   main-is:           www.hs
+--   other-modules:    Network.Wai.Middleware.StaticHost,Quid2.Util.Dir,Quid2.Util.Service
+--   build-depends:     base
+--                    , containers
+--                    --, optparse-applicative>=0.12.1.0
+--                    --, xdg-basedir
+--                    , bytestring
+--                    , directory,unix,hdaemonize
+--                    , top
+--                    , top-apps
+--                    , zm
+--                    , zm-language
+--                    , scotty,hslogger,text,filepath,wai-extra >= 3.0,case-insensitive >= 1.2,http-types >= 0.9,wai-app-static,mime-types,wai,regex-compat
+--   default-language:  Haskell2010
+
+-- Tests embedded in code documentation
+test-suite docs
+  default-language:   Haskell2010
+  type:               exitcode-stdio-1.0
+  main-is:            DocSpec.hs
+  build-depends:      base, doctest>=0.11.2,filemanip>=0.3.6.3
+  HS-Source-Dirs:     test
 
 source-repository head
   type:     git
-  location: https://github.com/tittoassini/top-apps
+  location: https://github.com/Quid2/top-apps
