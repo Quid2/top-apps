@@ -1,13 +1,26 @@
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveGeneric ,NoMonomorphismRestriction ,DeriveAnyClass #-} 
+{-# LANGUAGE DeriveGeneric ,NoMonomorphismRestriction ,DeriveAnyClass #-}
 
-module Data.Time.Util(timeDateTime,stdTimeF,formatT,timeF,Time(..),toTime,fromTime,UTCTime,getCurrentTime,currentTime) where
+module Data.Time.Util
+   ( timeDateTime
+   , stdTimeF
+   , formatT
+   , timeF
+   , Time(..)
+   , toTime
+   , fromTime
+   , UTCTime
+   , getCurrentTime
+   , currentTime
+   )
+where
 
 import           Data.Time.Clock
 import           Data.Time.Format
-import Data.Time.Calendar
-import Data.Word
-import GHC.Generics
+import           Data.Time.Calendar
+import           Data.Word
+import           GHC.Generics
+-- import Data.Flat
 import ZM
 -- import Control.DeepSeq
 
@@ -33,9 +46,12 @@ data Time = Time {
    utcDay::Integer
    -- | Seconds from midnight, 0 <= t < 86401s (because of leap-seconds)
    ,utcSecs::Word32
-   } deriving (Eq,Ord,Show,Generic,Flat,Model,NFData)
+   } deriving (Eq,Ord,Show,Generic,Flat,NFData,Model)
 
 toTime :: UTCTime -> Time
-toTime utcTime = Time (toModifiedJulianDay . utctDay $ utcTime) (toEnum . fromEnum . (/1000000000000) . utctDayTime $ utcTime)
+toTime utcTime = Time
+   (toModifiedJulianDay . utctDay $ utcTime)
+   (toEnum . fromEnum . (/ 1000000000000) . utctDayTime $ utcTime)
 
-fromTime t = UTCTime (ModifiedJulianDay $ utcDay t) (secondsToDiffTime . fromIntegral . utcSecs  $ t)
+fromTime t = UTCTime (ModifiedJulianDay $ utcDay t)
+                     (secondsToDiffTime . fromIntegral . utcSecs $ t)
