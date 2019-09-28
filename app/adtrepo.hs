@@ -70,6 +70,7 @@ setup cfg = do
   runFunction $ knownDataTypeRefsFun db
   runFunction validateZMFun
   wwwUI db
+  threadDelay 1000000000
   async $ do
     run $ recordType (Proxy :: Proxy ((), (), ()))
     run $ recordType (Proxy :: Proxy ((), (), (), ()))
