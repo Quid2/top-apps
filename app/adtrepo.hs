@@ -70,10 +70,11 @@ setup cfg = do
   runFunction $ knownDataTypeRefsFun db
   runFunction validateZMFun
   wwwUI db
-  threadDelay 1000000000
-  async $ do
-    run $ recordType (Proxy :: Proxy ((), (), ()))
-    run $ recordType (Proxy :: Proxy ((), (), (), ()))
+  -- WHY is not working?
+  -- threadDelay 1000000000
+  -- async $ do
+  --   run $ recordType (Proxy :: Proxy ((), (), ()))
+  --   run $ recordType (Proxy :: Proxy ((), (), (), ()))
   forever $ threadDelay 1000000000
 
 -- Add types from previous repo service
