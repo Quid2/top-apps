@@ -14,9 +14,9 @@ cabal-version:       >=1.10
 Tested-With: GHC == 7.10.3 GHC == 8.0.2 GHC == 8.2.2
 extra-source-files:
     stack.yaml
-    stack710.yaml
-    stack802.yaml
-    stack822.yaml
+--    stack710.yaml
+--    stack802.yaml
+--    stack822.yaml
     README.md
 
 library
