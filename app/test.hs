@@ -11,13 +11,11 @@
 module Main where
 
 import           Control.Concurrent.Async
+import qualified Data.Map                    as M
 import           Data.Maybe
 import           Data.String
 import           Data.Time.Util
 import           Network.HaskellNet.SMTP.SSL
-
---import           Network.Mail.Client.Gmail
--- import           Network.Mail.Mime
 import           Network.Top
 import           Repo.Memory
 import           System.Environment
@@ -43,10 +41,9 @@ testSensors =
 testRepo :: Test
 testRepo =
   Test "RepoDB" 60 $ do
-    mrepo <- memRepo
-    let tm = absTypeModel (Proxy :: Proxy Bool)
-    tm2 <- run $ getAbsTypeModel mrepo (typeName tm)
-    return $ Right tm == tm2
+    let [(boolRef, boolADT)] = M.toList $ absEnv (Proxy :: Proxy Bool)
+    r <- ((== boolADT) <$>) <$> run (solveAbsRef boolRef)
+    return $ r == Right True
 
 data Test =
   Test
