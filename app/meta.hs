@@ -7,6 +7,7 @@ import           Control.Concurrent
 import           Data.IORef
 import qualified Data.Map           as M
 import           Network.Top
+import           Repo
 import           Repo.Disk
 import qualified Repo.Types         as R
 
@@ -75,11 +76,10 @@ main = do
         AskLastValue t ->
           (M.lookup t <$> readIORef state) >>= mapM_ (output conn . LastValue t)
         _ -> return ()
-
 -- Display the definition of a type (if the type is not registered it can be quite slow)
-dbgType t
-  -- Persistent local repository for type definitions
- = do
-  repo <- dbRepo "/tmp"
-  runApp def ByType (getAbsTypeModel repo t) >>= dbgS . take 200 . prettyShow
-  R.close repo
+-- dbgType t
+--   -- Persistent local repository for type definitions
+--  = do
+--   repo <- dbRepo "/tmp"
+--   runApp def ByType (getAbsTypeModel repo t) >>= dbgS . take 200 . prettyShow
+--   R.close repo

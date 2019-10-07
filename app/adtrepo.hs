@@ -20,14 +20,15 @@ import           Data.String
 import qualified Data.Text                            as T
 import           Data.Word
 import           Model.Validate
-import           Network.Top                          hiding (solve, (<>))
-import           Network.Top.Repo
+import           Network.Top                          hiding (recordADT, solve,
+                                                       (<>))
+import           Network.Top.Repo                     hiding (recordADT)
 import qualified Network.Top.Repo0                    as R0
 import qualified Network.Wai
 import qualified Network.Wai.Handler.Warp             as Warp
 import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import           Quid2.Util.Service
-import           Repo.DB
+import           Repo.Disk.DB
 import           Repo.Types                           hiding (Repo (..))
 import           System.IO                            (stdout)
 import           Text.Blaze.Html.Renderer.Text
@@ -49,18 +50,11 @@ data MyConfig =
     }
   deriving (Show, Read)
 
-serviceName = "top-repo2"
-
-main = initService serviceName setup
+main = initService "top-repo2" setup
 
 setup :: Quid2.Util.Service.Config MyConfig -> IO ()
 setup cfg = do
-  let appCnf = appConf cfg
-  let logPriority_ = maybe DEBUG logPriority appCnf
-  let logStdOut_ = maybe True logStdOut appCnf
-  updateGlobalLogger rootLoggerName $ setLevel logPriority_
-  when logStdOut_ $ logLevelOut logPriority_ stdout
-  dbgS $ show cfg
+  setupLog cfg
   db <- openDB (stateDir cfg)
   readPreviousRepo db
   -- Channel Agents
@@ -76,6 +70,14 @@ setup cfg = do
   --   run $ recordType (Proxy :: Proxy ((), (), ()))
   --   run $ recordType (Proxy :: Proxy ((), (), (), ()))
   forever $ threadDelay 1000000000
+
+setupLog cfg = do
+  let appCnf = appConf cfg
+  let logPriority_ = maybe DEBUG logPriority appCnf
+  let logStdOut_ = maybe True logStdOut appCnf
+  updateGlobalLogger rootLoggerName $ setLevel logPriority_
+  when logStdOut_ $ logLevelOut logPriority_ stdout
+  dbgS $ show cfg
 
 -- Add types from previous repo service
 readPreviousRepo db = do
@@ -201,7 +203,7 @@ inDB db rs =
   mapM (\r -> (r, ) <$> getDB db r) rs
 
 runFunction f = do
-  async (runAppForever def ByType $ funReply f)
+  funServe f
   run $ recordType (funProxy f)
 
 funProxy :: forall i o. (i -> IO o) -> Proxy (Function i o)
