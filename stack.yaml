@@ -16,7 +16,7 @@ extra-deps:
   - flat-0.3.4
 
   - github: Quid2/zm
-    commit: 0b630aecec8f629fb88dab852839733c8a62412d
+    commit: 79162b2805dc62a39ff5e4e1a5b429410b46020b
 
   - github: Quid2/top
     commit: a19d0d1b025a21b880038ed469323602350f14d6
