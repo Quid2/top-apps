@@ -19,7 +19,7 @@ extra-deps:
     commit: 79162b2805dc62a39ff5e4e1a5b429410b46020b
 
   - github: Quid2/top
-    commit: a19d0d1b025a21b880038ed469323602350f14d6
+    commit: 3d691e53307e743291a7c73ec23a7cef910af6c5
 
   - github: Quid2/zm-language
     commit: b55e40f0d2cb8a0eb46b88cf9bfc10d87c85c91c
