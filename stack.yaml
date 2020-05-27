@@ -1,34 +1,35 @@
-resolver: lts-14.7
+resolver: lts-14.27
 
 packages:
   - .
-  # - location: ../model
-  #   extra-dep: true
-  # - location: ../zm
-  #   extra-dep: true
-  # - location: ../top
-  #   extra-dep: true
 
 #allow-newer: true
 
 extra-deps:
   - model-0.5
-  - flat-0.3.4
+  - flat-0.4.4
 
+  #- ../zm
   - github: Quid2/zm
-    commit: 79162b2805dc62a39ff5e4e1a5b429410b46020b
+    commit: 5e30fb143f13c0a47c3a0adb43af8fd10249e2bd
+
+  #- zm-0.3.2
 
   - github: Quid2/top
-    commit: 3d691e53307e743291a7c73ec23a7cef910af6c5
+    commit: 0f8dfa54d977053d02396e914c00b84cc1c1c498
 
   - github: Quid2/zm-language
-    commit: b55e40f0d2cb8a0eb46b88cf9bfc10d87c85c91c
+    commit: a80ce3944d0d590d189f36f7be58bb1b081b6b6e
 
-  - Unique-0.4.7.6@sha256:a1ff411f4d68c756e01e8d532fbe8e57f1ac77f2cc0ee8a999770be2bca185c5,2723
-  - acid-state-0.14.3@sha256:f719be0658ff61fa744a1ed8f49209e103b7bf01034d2911d2fb72c34d22cee9,3024
-  - HaskellNet-SSL-0.3.4.1@sha256:3ca14dd69460a380cf69aed40654fb10c4c03e344632b6a9986568c87feda157
-  - megaparsec-6.5.0@sha256:510b5471f31e965a06f91d110456f24ad7e191e0778f4fc8ec053dcb182abcbf
-  - HaskellNet-0.5.1@sha256:53f2cfffb140740691296f905a70143c859b571eea3f5cf5f7a4642851d9e38a
-  - connection-0.2.8@sha256:b33ed18b274e9d65ffefcda46ba3d6ff852bec1e7ffcb686985228dc52631c2e
-  - mime-mail-0.4.14@sha256:22e54d99c3f9f21004c929f0cf0c7ab75fcee5e0666c03517157be61be6fea93
-  - socks-0.5.6@sha256:bb051589a00d18301556dbff82d89955a5534baf91a5e050e5f3a65f3415609c
+  - acid-state-0.16.0.1@sha256:d43f6ee0b23338758156c500290c4405d769abefeb98e9bc112780dae09ece6f,6207
+
+  - HaskellNet-SSL-0.3.4.1@sha256:3ca14dd69460a380cf69aed40654fb10c4c03e344632b6a9986568c87feda157,1843
+  - Unique-0.4.7.7@sha256:2269d3528271e25d34542e7c24a4e541e27ec33460e1ea00845da95b82eec6fa,2777
+  - loglevel-0.1.0.0@sha256:951338d262fb734cc2f06a6ee9fddb7ea998a71a5098011d864f038f4ec7ac2a,1256
+  - HaskellNet-0.5.1@sha256:53f2cfffb140740691296f905a70143c859b571eea3f5cf5f7a4642851d9e38a,1584
+  - connection-0.2.8@sha256:b33ed18b274e9d65ffefcda46ba3d6ff852bec1e7ffcb686985228dc52631c2e,1525
+  - mime-mail-0.4.14@sha256:22e54d99c3f9f21004c929f0cf0c7ab75fcee5e0666c03517157be61be6fea93,1647
+  - socks-0.5.6@sha256:bb051589a00d18301556dbff82d89955a5534baf91a5e050e5f3a65f3415609c,1299
+  # - github: Quid2/zm
+  #   commit: 79162b2805dc62a39ff5e4e1a5b429410b46020b
+  # - happy-1.19.9
