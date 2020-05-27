@@ -67,9 +67,12 @@ setup cfg = do
   -- WHY is not working?
   -- threadDelay 1000000000
   -- async $ do
-  --   run $ recordType (Proxy :: Proxy ((), (), ()))
-  --   run $ recordType (Proxy :: Proxy ((), (), (), ()))
   forever $ threadDelay 1000000000
+
+pp = do
+  run $ recordType (Proxy :: Proxy ((), (), ()))
+  run $ recordType (Proxy :: Proxy ((), (), (), ()))
+  run $ recordType (Proxy :: Proxy ((), (), (), (), ()))
 
 setupLog cfg = do
   let appCnf = appConf cfg

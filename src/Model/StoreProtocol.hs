@@ -4,7 +4,7 @@
 module Model.StoreProtocol where
 
 import qualified Data.ByteString as B
-import           Network.Top     hiding (RepoProtocol (..), solve)
+import           Network.Top     hiding (solve)
 
 -- import ZM hiding (solve)
 x = runApp def ByType $ recordType (Proxy :: Proxy ValueStoreProtocol)

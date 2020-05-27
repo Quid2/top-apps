@@ -1,22 +1,22 @@
-{-# LANGUAGE DeriveAnyClass  #-}
-{-# LANGUAGE DeriveGeneric   #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-import           Chat.Model         (Message)
+import           Chat.Model (Message)
 import           Control.Concurrent
 import           Data.IORef
-import qualified Data.Map           as M
+import qualified Data.Map as M
 import           Network.Top
 import           Repo
 import           Repo.Disk
-import qualified Repo.Types         as R
+import qualified Repo.Types as R
 
 {-
 A simple meta protocol: store the latest value of any type sent via Top and returns it on request.
 -}
 -- The data type that represents the meta protocol
-data LastValueProtocol
-  = AskLastValue AbsType -- Ask for the last value of the given type
+data LastValueProtocol =
+    AskLastValue AbsType -- Ask for the last value of the given type
   | LastValue AbsType (BLOB FlatEncoding) -- Return the last value (flat-encoded)
   deriving (Eq, Ord, Show, Generic, Flat, Model)
 
@@ -27,13 +27,15 @@ register = runApp def ByType $ recordType (Proxy :: Proxy (LastValueProtocol))
 -- We are only interested in receiving LastValue messages so we use a pattern to filter out this particular constructor
 client
   -- First we send a value of type String
- = do
-  runApp def ByType $ \conn -> output conn "Just testing!"
-  -- Then we retrieve it using the LastValue service
-  runApp def (byPattern $(patternE [p|LastValue _ _|])) $ \conn -> do
-    output conn $ AskLastValue stringType
-    LastValue absType value <- input conn
-    putStrLn $ "Got it: " ++ show ((unflat . unblob $ value) :: Decoded String)
+   = do
+    runApp def ByType $ \conn -> output conn "Just testing!"
+    -- Then we retrieve it using the LastValue service
+    runApp def (byPattern $(patternE [p|LastValue _ _|]))
+      $ \conn -> do
+        output conn $ AskLastValue stringType
+        LastValue absType value <- input conn
+        putStrLn
+          $ "Got it: " ++ show ((unflat . unblob $ value) :: Decoded String)
 
 stringType = absType (Proxy :: Proxy String)
 
@@ -52,29 +54,31 @@ main = do
   -- The first connection listen for all values exchanged on Top
   -- and stores the last one of every type
   -- We connect using ByAny that will return values of any type
-  forkIO $
-    runApp def ByAny $ \conn ->
-      forever $
+  forkIO
+    $ runApp def ByAny
+    $ \conn -> forever
+    $
     -- As the value received can be of any type
     -- it comes as a TypedBLOB, a combination of the type and the binary encoding of the value
-       do
-        TypedBLOB msgType msgBody <- input conn
-    -- show what we got
-    -- this shows the unique reference (basically the hash code) of the type
-        dbgS (show msgType)
-    -- this shows the actual type definition (if the type has been registered)
-    -- dbgType msgType
-    -- store it in the state
-        modifyIORef' state (M.insert msgType msgBody)
+    do
+      TypedBLOB msgType msgBody <- input conn
+      -- show what we got
+      -- this shows the unique reference (basically the hash code) of the type
+      dbgS (show msgType)
+      -- this shows the actual type definition (if the type has been registered)
+      -- dbgType msgType
+      -- store it in the state
+      modifyIORef' state (M.insert msgType msgBody)
   -- The second connection interprets the protocol commands
   -- returning on request the last value detected for every type
-  runApp def ByType $ \conn ->
-    forever $ do
+  runApp def ByType
+    $ \conn -> forever
+    $ do
       cmd <- input conn
-    --dbgS (show cmd)
+      --dbgS (show cmd)
       case cmd of
-        AskLastValue t ->
-          (M.lookup t <$> readIORef state) >>= mapM_ (output conn . LastValue t)
+        AskLastValue t -> (M.lookup t <$> readIORef state)
+          >>= mapM_ (output conn . LastValue t)
         _ -> return ()
 -- Display the definition of a type (if the type is not registered it can be quite slow)
 -- dbgType t

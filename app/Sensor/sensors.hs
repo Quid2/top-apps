@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 
 -- |Periodically send current time and local temperature
+-- BUG: no error logged if temperature reading fails
 module Main where
 
 import           Control.Concurrent
@@ -11,11 +12,11 @@ import           Data.Either
 import           Data.Maybe
 import           Data.Time.Util
 import           Network.HostName
-import           Network.Top        hiding (Config)
+import           Network.Top             hiding ( Config )
 import           Quid2.Util.Service
 import           Sensor.Model
 import           System.Exit
-import           System.IO          (stdout)
+import           System.IO                      ( stdout )
 import           System.Process
 import           Text.Regex.TDFA
 
@@ -35,12 +36,13 @@ main = initService serviceName setup
 
 setup :: Config MyConfig -> IO ()
 setup cfg = do
-  let appCnf = appConf cfg
+  let appCnf   = appConf cfg
   let dbgLevel = fromMaybe WARNING (debugLevel <$> appCnf)
   logLevelOut dbgLevel stdout
   dbgS $ show cfg
-  forkIO $ sensor currentTime (milliseconds 500)
-  sensor localTemperature (seconds 10)
+  sensor currentTime (milliseconds 500)
+  --forkIO $ sensor currentTime (milliseconds 500)
+  -- sensor localTemperature (seconds 10)
 
 p = parseTemperature "More\nCore 0:       +44.7xC  ...dsds"
 
@@ -64,46 +66,39 @@ cpuTemperature = do
 parseTemperature :: String -> Maybe Float
 parseTemperature str =
   let (_, _, _, matches) :: (String, String, String, [String]) =
-        str =~ "Core 0:[ ]+([+-][1-9][0-9]*[.][0-9]+).C"
-   in if length matches == 1
-        then let n = head matches
-              in Just
-                   (read
-                      (if head n == '+'
-                         then tail n
-                         else n) :: Float)
+          str =~ "Core 0:[ ]+([+-][1-9][0-9]*[.][0-9]+).C"
+  in  if length matches == 1
+        then
+          let n = head matches
+          in  Just (read (if head n == '+' then tail n else n) :: Float)
         else Nothing
 
 sensor0 read minInterval = do
   r <- read
   dbgShow r
 
+
 -- | Read a sensor and send over value on corresponding channel
-sensor ::
-     forall a. (NFData a, Flat a, Model a, Show a, Eq a)
+sensor
+  :: forall a
+   . (NFData a, Flat a, Model a, Show a, Eq a)
   => IO a
   -> Int
   -> IO ()
-sensor read minInterval =
-  runA $ \conn -> do
-    dbgS "started sensor"
-    let io = first show <$> strictTry read
-    let out v =
-          when (isRight v) $
-          output
-            conn
-            (let Right o = v
-              in o)
-    let loop v = do
-          threadDelay minInterval
-          v1 <- io
-          --dbgShow v1
-          when (v1 /= v) $ out v1
-          loop v1
-    v <- io
-    dbgShow v
-    out v
-    loop v
+sensor read minInterval = runA $ \conn -> do
+  dbgS "started sensor"
+  let io = first show <$> strictTry read
+  let out v = when (isRight v) $ output conn (let Right o = v in o)
+  let loop v = do
+        threadDelay minInterval
+        v1 <- io
+        --dbgShow v1
+        when (v1 /= v) $ out v1
+        loop v1
+  v <- io
+  dbgShow v
+  out v
+  loop v
 
 runA = runAppForever def ByType
 -- run app = runApp def ByType app

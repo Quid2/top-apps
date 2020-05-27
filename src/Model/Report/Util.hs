@@ -8,7 +8,6 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import Model.Report
 import Control.Monad
-import Data.Maybe
 import Network.Top.Types(Config(..),def,cfgIP,cfgPort)
 
 reportURL cfg = concat["http://",cfgIP cfg,":",show (cfgPort cfg),"/report"]

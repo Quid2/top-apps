@@ -1,7 +1,8 @@
 module Util where
 
-import Network.Top.Util
+import           Network.Top.Util
 
-noRequestLogger req status maybeL = return ()
+noRequestLogger _ _ _ = return ()
 
-requestLogger req status maybeL = dbg ["Request:",show req,show status,show maybeL]
+requestLogger req status maybeL =
+  dbg ["Request:", show req, show status, show maybeL]
