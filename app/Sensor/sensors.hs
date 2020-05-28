@@ -40,9 +40,9 @@ setup cfg = do
   let dbgLevel = fromMaybe WARNING (debugLevel <$> appCnf)
   logLevelOut dbgLevel stdout
   dbgS $ show cfg
-  sensor currentTime (milliseconds 500)
-  --forkIO $ sensor currentTime (milliseconds 500)
-  -- sensor localTemperature (seconds 10)
+  -- sensor currentTime (milliseconds 500)
+  forkIO $ sensor currentTime (milliseconds 500)
+  sensor localTemperature (seconds 10)
 
 p = parseTemperature "More\nCore 0:       +44.7xC  ...dsds"
 
