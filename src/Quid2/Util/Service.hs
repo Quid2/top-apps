@@ -51,8 +51,8 @@ data Config c =
   Config
   -- runMode::RunMode
   -- pname :: String
-    { privateKeyFile :: FilePath
-    , lockFile       :: FilePath
+    { --privateKeyFile :: FilePath
+      lockFile       :: FilePath
     , stateDir       :: FilePath
     , logDir         :: FilePath
     , tmpDir         :: FilePath
@@ -139,18 +139,20 @@ initServiceFull name userCmd realMain maybeRootMain = do
 doMain :: Read a => String -> (Config a -> IO b) -> RunMode -> UserCmd a -> IO b
 doMain name realMain mode userCmd = do
   userID <- getRealUserID
-  home   <- fmap homeDirectory $ getUserEntryForID userID
-  let lkFile     = home </> ("." ++ name ++ ".lock")
-  let configFile = home </> ("." ++ name ++ ".conf")
-  let appDir     = home </> '.' : name
-  let stateDir   = appDir </> "state"
-  let logDir     = appDir </> "log"
+  --home   <- fmap homeDirectory $ getUserEntryForID userID
+  appDir <- getCurrentDirectory
+  let stateDir   = appDir </> "state" </> name
+  let logDir     = appDir </> "log" </> name
+  let lkFile     = appDir </> ("." ++ name ++ ".lock")
+  let configFile = appDir </> ("." ++ name ++ ".conf")
+  -- let appDir     = home </> '.' : name
   --let tmpDir     = appDir </> "tmp"
   let logFile    = logDir </> "debug.txt"
-  let privFile   = home </> "privateKey.quid2"
+  --let privFile   = home </> "privateKey.quid2"
   tmpDir <- withFileLock lkFile Exclusive $ \_ -> do
     mkDir stateDir
     mkDir logDir
+  --  mkDir configDir
   --makeNewDir tmpDir
   -- makeDir tmpDir
   -- A different tmpDir per instance of application
@@ -171,12 +173,12 @@ doMain name realMain mode userCmd = do
       return $ either (\(_ :: IOException) -> Nothing) (Just . read) mconf
   when (isNothing mconf) $ dbg "No configuration provided."
     -- Any exception will cause a restart
-  let cfg = Config { stateDir       = stateDir
-                   , logDir         = logDir
-                   , tmpDir         = tmpDir
-                   , privateKeyFile = privFile
-                   , lockFile       = lkFile
-                   , appConf        = mconf
+  let cfg = Config { stateDir = stateDir
+                   , logDir   = logDir
+                   , tmpDir   = tmpDir
+                   --, privateKeyFile = privFile
+                   , lockFile = lkFile
+                   , appConf  = mconf
                    }
   handle (\(e :: SomeException) -> fatalErr (show e)) $ realMain cfg
 
