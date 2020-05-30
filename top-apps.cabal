@@ -299,11 +299,37 @@ executable top-sensor-check
         ansi-terminal -any,
         Glob -any
 
-executable top-sensors
-    main-is: Sensor/sensors.hs
+executable top-temperature
+    main-is: Sensor/temperature.hs
     hs-source-dirs: app
     other-modules:
         Sensor.Model
+        Sensor
+        App
+    default-language: Haskell2010
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
+    build-depends:
+        base -any,
+        extra -any,
+        hostname -any,
+        process -any,
+        regex-tdfa -any,
+        time -any,
+        top -any,
+        top-apps -any,
+        zm -any,
+        utf8-string -any,
+        text -any,
+        ansi-terminal -any,
+        Glob -any
+
+executable top-time
+    main-is: Sensor/time.hs
+    hs-source-dirs: app
+    other-modules:
+        Sensor
+        Sensor.Model
+        App
     default-language: Haskell2010
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
     build-depends:
