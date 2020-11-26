@@ -11,3 +11,5 @@ executable top-host
     build-depends:
         base -any,
         top-apps -any
+
+    ghc-options: -with-rtsopts=-T

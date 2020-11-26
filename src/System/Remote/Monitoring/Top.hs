@@ -26,9 +26,10 @@ module System.Remote.Monitoring.Top (
 
 import Control.Concurrent (ThreadId, forkFinally, myThreadId, throwTo)
 import Control.Exception ()
+
 -- import Data.Foldable (Foldable (toList))
 
-import Control.Monad
+import Control.Monad (when)
 import Data.Default (Default (..))
 import qualified Data.HashMap.Strict as M
 import qualified Data.Text as T
