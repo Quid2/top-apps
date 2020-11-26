@@ -1,26 +1,25 @@
-{-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module Sensor
-  ( sensor
-  )
-where
+module Sensor (
+  sensor,
+) where
 
-import           Data.Bifunctor
-import           Data.Either
-import           Network.Top             hiding ( Config )
+import Data.Bifunctor
+import Data.Either
+import Network.Top hiding (Config)
 
 -- sensor0 read minInterval = do
 --   r <- read
 --   dbgShow r
 
--- | Periodically read a sensor and send over value on corresponding channel, if the value of the reading changes.
-sensor
-  :: forall a
-   . (NFData a, Flat a, Model a, Show a, Eq a)
-  => IO a
-  -> Int
-  -> IO ()
+-- | Periodically read a sensor and send over its  value on the corresponding channel, if the value of the reading changes or it is the first time that the sensor is read.
+sensor ::
+  forall a.
+  (NFData a, Flat a, Model a, Show a, Eq a) =>
+  IO a ->
+  Int ->
+  IO ()
 sensor read minInterval = runA $ \conn -> do
   dbgS "started sensor"
   let io = first show <$> strictTry read
@@ -36,8 +35,9 @@ sensor read minInterval = runA $ \conn -> do
   out v
   loop v
 
-runA :: forall a r . (Model a, Flat a, Show a) => App a r -> IO r
+runA :: forall a r. (Model a, Flat a, Show a) => App a r -> IO r
 runA = runAppForever def ByType
+
 -- run app = runApp def ByType app
 -- dbgShow = dbgS . show
 -- dbgSh = dbgS . show
