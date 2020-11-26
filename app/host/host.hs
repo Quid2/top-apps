@@ -1,5 +1,7 @@
 module Main where
 
-import App 
+import App
+import Stats.Host
 
-main = 
+main = app $ \store -> do
+    registerHostMetrics store

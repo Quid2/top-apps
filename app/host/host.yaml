@@ -1,0 +1,7 @@
+host: root@giga.quid2.org
+deploy_path: "/root/app/top-host"
+repo: "https://github.com/Quid2/top-apps"
+revision: origin/master
+build_script:
+  - cd app/host;/root/.local/bin/stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL top-host;cd /root/app/top-host/current/app/host;bin/top-host </dev/null >/dev/null 2>&1 &

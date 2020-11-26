@@ -3,6 +3,8 @@ resolver: nightly-2020-11-23
 packages:
   - .
 
+allow-newer: true
+
 extra-deps:
   - "../.."
 
@@ -18,3 +20,6 @@ extra-deps:
   - acid-state-0.16.0.1@sha256:d43f6ee0b23338758156c500290c4405d769abefeb98e9bc112780dae09ece6f,6207
   - loglevel-0.1.0.0@sha256:951338d262fb734cc2f06a6ee9fddb7ea998a71a5098011d864f038f4ec7ac2a,1256
   - megaparsec-8.0.0@sha256:362f85e243ecbcb550e1de6e5c74ba5a50c09edaa1208c99bc5b9fd242227fc6,3808
+  - system-linux-proc-0.1.1@sha256:00f0c5b324ad9afbf7db6086f43804025d50d523b1ff5c9eddb3c80806d46870,2181
+  
+
