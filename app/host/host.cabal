@@ -1,7 +1,7 @@
 name: host
 version: 0.1
 build-type: Simple
-cabal-version: >= 1.2
+cabal-version: >= 1.10
 
 executable top-host
     main-is: host.hs

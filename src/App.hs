@@ -9,19 +9,21 @@ module App (app, timed) where
 
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX (getPOSIXTime)
-import GHC.Stats
-import qualified GHC.Stats as Stats
-import Network.HostName
+import Network.HostName (getHostName)
 import RIO
-import Stats.App
-import Stats.Host
-import System.Environment
-import System.Metrics
+import Stats.App (registerAppMetrics)
+import Stats.Host (registerHostMetrics)
+import System.Environment (getProgName)
+import System.Metrics (Store, createLabel, newStore)
 import qualified System.Metrics.Counter as Counter
 import qualified System.Metrics.Distribution as Distribution
 import qualified System.Metrics.Label as Label
-import System.Posix.Process
-import System.Remote.Monitoring.Top
+import System.Posix.Process (getProcessID)
+import System.Remote.Monitoring.Top (
+    TopOptions (debug, flushInterval),
+    def,
+    forkEkgTop,
+ )
 
 app :: (Store -> IO b) -> IO b
 app op = do
@@ -35,9 +37,9 @@ app op = do
     forkEkgTop def{flushInterval = 60, debug = True} store
     op store
 
-host :: IO ()
-host = app $ \store -> do
-    registerHostMetrics store
+-- host :: IO ()
+-- host = app $ \store -> do
+--     registerHostMetrics store
 
 -- t :: IO ()
 -- t = app $ \store -> do
