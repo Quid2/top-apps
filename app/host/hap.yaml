@@ -1,3 +1,6 @@
+targets:
+  - host: root@nano.quid2.org
+  - host: root@giga.quid2.org
 deploy_path: "/root/app/top-host"
 repo: "https://github.com/Quid2/top-apps"
 revision: origin/master
