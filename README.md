@@ -6,6 +6,9 @@ Developing distributed applications that use *Top*, the type oriented protocol, 
 * automatically derive instances of the *Flat* (serialisation) and *Model* (introspection) classes
 * connect to one or more typed channels and send/receive values to/from any other client using the same types
 
+
+
+
 #### Example: collecting data from distributed sensors
 
 Suppose that you want to keep an eye on your house while at work, and in particular check for possible fires.
