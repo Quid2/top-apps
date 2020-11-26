@@ -29,6 +29,10 @@ library
         Model.StoreProtocol
         Quid2.Util.Dir
         Quid2.Util.Service
+        App
+        -- Test
+        Ekg
+        System.Remote.Monitoring.Top 
     hs-source-dirs: src app
     default-language: Haskell2010
     build-depends:
@@ -45,13 +49,19 @@ library
         zm >=0.3 && <0.4,
         filelock -any,
         temporary -any,
-        zm-language -any,
+        -- zm-language -any,
         containers -any,
         utf8-string -any,
         text -any,
         ansi-terminal -any,
         Glob -any,
-        loglevel
+        loglevel,
+        async -any,
+        --  HaskellNet-SSL -any,
+        ekg-core,
+        disk-free-space
+        ,flat
+        ,unordered-containers,data-default,rio
 
 
 -- executable qq
@@ -96,256 +106,258 @@ library
 --     build-depends: base,loglevel,text,async
 
 
-executable top-test
-    main-is: test.hs
-    hs-source-dirs: app
-    other-modules:
-        Util
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        async -any,
-        base -any,
-        bytestring -any,
-        containers -any,
-        HaskellNet-SSL -any,
-        hslogger -any,
-        pretty -any,
-        text -any,
-        top -any,
-        top-apps -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- MOVE TEST INSIDE SINGLE APPS
+-- executable top-test
+--     main-is: test.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Util
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         async -any,
+--         base -any,
+--         bytestring -any,
+--         containers -any,
+--         HaskellNet-SSL -any,
+--         hslogger -any,
+--         pretty -any,
+--         text -any,
+--         top -any,
+--         top-apps -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-repo2
-    main-is: adtrepo.hs
-    hs-source-dirs: app src
-    other-modules:
-        Model.Validate
-        Quid2.Util.Dir
-        Quid2.Util.Service
-        Util
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        blaze-html -any,
-        bytestring -any,
-        containers -any,
-        directory -any,
-        filepath -any,
-        hdaemonize -any,
-        hslogger -any,
-        ListLike -any,
-        mtl -any,
-        pretty -any,
-        scotty -any,
-        text -any,
-        top -any,
-        top-apps -any,
-        unix -any,
-        wai -any,
-        wai-extra -any,
-        warp -any,
-        zm -any,
-        zm-language -any,
-        filelock -any,
-        temporary -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-repo2
+--     main-is: adtrepo.hs
+--     hs-source-dirs: app src
+--     other-modules:
+--         Model.Validate
+--         Quid2.Util.Dir
+--         Quid2.Util.Service
+--         Util
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         blaze-html -any,
+--         bytestring -any,
+--         containers -any,
+--         directory -any,
+--         filepath -any,
+--         hdaemonize -any,
+--         hslogger -any,
+--         ListLike -any,
+--         mtl -any,
+--         pretty -any,
+--         scotty -any,
+--         text -any,
+--         top -any,
+--         top-apps -any,
+--         unix -any,
+--         wai -any,
+--         wai-extra -any,
+--         warp -any,
+--         zm -any,
+--         zm-language -any,
+--         filelock -any,
+--         temporary -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-store
-    main-is: store.hs
-    hs-source-dirs: app
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        bytestring -any,
-        directory -any,
-        filepath -any,
-        hslogger -any,
-        pretty -any,
-        top -any,
-        top-apps -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
 
-executable top-meta
-    main-is: meta.hs
-    hs-source-dirs: app
-    other-modules:
-        Chat.Model
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        containers -any,
-        top -any,
-        transformers -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-store
+--     main-is: store.hs
+--     hs-source-dirs: app
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         bytestring -any,
+--         directory -any,
+--         filepath -any,
+--         hslogger -any,
+--         pretty -any,
+--         top -any,
+--         top-apps -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-hello
-    main-is: hello.hs
-    hs-source-dirs: app
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        top -any,
-        transformers -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-meta
+--     main-is: meta.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Chat.Model
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         containers -any,
+--         top -any,
+--         transformers -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-chat
-    main-is: Chat/chat.hs
-    hs-source-dirs: app
-    other-modules:
-        Chat.Model
-        Chat.Util
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        async -any,
-        base -any,
-        pipes -any,
-        top -any,
-        transformers -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-hello
+--     main-is: hello.hs
+--     hs-source-dirs: app
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         top -any,
+--         transformers -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-chat-history
-    main-is: Chat/chat-history.hs
-    hs-source-dirs: app
-    other-modules:
-        Chat.Model
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        pipes -any,
-        top -any,
-        transformers -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-chat
+--     main-is: Chat/chat.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Chat.Model
+--         Chat.Util
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         async -any,
+--         base -any,
+--         pipes -any,
+--         top -any,
+--         transformers -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-signed
-    main-is: signed.hs
-    hs-source-dirs: app
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        bytestring -any,
-        ed25519 -any,
-        top -any,
-        transformers -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-chat-history
+--     main-is: Chat/chat-history.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Chat.Model
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         pipes -any,
+--         top -any,
+--         transformers -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-sensor1
-    main-is: Sensor/sensor1.hs
-    hs-source-dirs: app
-    other-modules:
-        Sensor.Model1
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        top -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-signed
+--     main-is: signed.hs
+--     hs-source-dirs: app
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         bytestring -any,
+--         ed25519 -any,
+--         top -any,
+--         transformers -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-sensor-check
-    main-is: Sensor/sensor-check1.hs
-    hs-source-dirs: app
-    other-modules:
-        Sensor.Model1
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        top -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-sensor1
+--     main-is: Sensor/sensor1.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Sensor.Model1
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         top -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-temperature
-    main-is: Sensor/temperature.hs
-    hs-source-dirs: app
-    other-modules:
-        Sensor.Model
-        Sensor
-        App
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        extra -any,
-        hostname -any,
-        process -any,
-        regex-tdfa -any,
-        time -any,
-        top -any,
-        top-apps -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-sensor-check
+--     main-is: Sensor/sensor-check1.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Sensor.Model1
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         top -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
-executable top-time
-    main-is: Sensor/time.hs
-    hs-source-dirs: app
-    other-modules:
-        Sensor
-        Sensor.Model
-        App
-    default-language: Haskell2010
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    build-depends:
-        base -any,
-        extra -any,
-        hostname -any,
-        process -any,
-        regex-tdfa -any,
-        time -any,
-        top -any,
-        top-apps -any,
-        zm -any,
-        utf8-string -any,
-        text -any,
-        ansi-terminal -any,
-        Glob -any
+-- executable top-temperature
+--     main-is: Sensor/temperature.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Sensor.Model
+--         Sensor
+--         App
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         extra -any,
+--         hostname -any,
+--         process -any,
+--         regex-tdfa -any,
+--         time -any,
+--         top -any,
+--         top-apps -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
+
+-- executable top-time
+--     main-is: Sensor/time.hs
+--     hs-source-dirs: app
+--     other-modules:
+--         Sensor
+--         Sensor.Model
+--         App
+--     default-language: Haskell2010
+--     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+--     build-depends:
+--         base -any,
+--         extra -any,
+--         hostname -any,
+--         process -any,
+--         regex-tdfa -any,
+--         time -any,
+--         top -any,
+--         top-apps -any,
+--         zm -any,
+--         utf8-string -any,
+--         text -any,
+--         ansi-terminal -any,
+--         Glob -any
 
 -- Tests embedded in code documentation
 test-suite doc
