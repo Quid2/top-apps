@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Stats.Host (registerHostMetrics) where
+module Stats.Host (registerHostName, registerHostMetrics) where
 
 {-
 See also:
@@ -15,14 +15,23 @@ https://hackage.haskell.org/package/disk-free-space
 
 import qualified Data.HashMap.Strict as M
 import Data.Maybe (fromJust)
+import qualified Data.Text as T
+import Network.HostName (getHostName)
 import System.Exit (ExitCode (ExitSuccess))
 import System.Linux.Proc.MemInfo (
     MemInfo (memAvailable, memTotal),
     readProcMemInfo,
  )
-import System.Metrics (Store, Value (Gauge), registerGroup)
+import System.Metrics
+import qualified System.Metrics.Label as Label
 import System.Process (readProcessWithExitCode)
 import Text.Regex.TDFA ((=~))
+
+registerHostName :: Store -> IO ()
+registerHostName store = do
+    name <- createLabel "host.name" store
+    host <- getHostName
+    Label.set name $ T.pack host
 
 registerHostMetrics :: Store -> IO ()
 registerHostMetrics store = do
@@ -42,6 +51,7 @@ registerHostMetrics store = do
         cpuTemperature
         store
 
+gauge :: Integral a => (b1 -> a) -> Either b2 b1 -> Value
 gauge acc = Gauge . fromIntegral . either (const 0) acc
 
 -- |Returns CPU temperature (in Linux systems with working 'sensors')

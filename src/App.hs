@@ -9,16 +9,14 @@ module App (app, timed) where
 
 import qualified Data.Text as T
 import Data.Time.Clock.POSIX (getPOSIXTime)
-import Network.HostName (getHostName)
 import RIO
-import Stats.App (registerAppMetrics)
-import Stats.Host (registerHostMetrics)
-import System.Environment (getProgName)
+import Stats.App (registerAppMetrics, registerAppNames)
+import Stats.Host (registerHostName)
 import System.Metrics (Store, createLabel, newStore)
 import qualified System.Metrics.Counter as Counter
 import qualified System.Metrics.Distribution as Distribution
 import qualified System.Metrics.Label as Label
-import System.Posix.Process (getProcessID)
+
 import System.Remote.Monitoring.Top (
     TopOptions (debug, flushInterval),
     def,
@@ -29,11 +27,16 @@ app :: (Store -> IO b) -> IO b
 app op = do
     store <- newStore
     registerAppMetrics store
-    appName <- createLabel "app.name" store
-    host <- getHostName
-    name <- getProgName
-    id <- getProcessID
-    Label.set appName $ T.concat [T.pack name, "-", T.pack . show $ id, "@", T.pack host]
+    registerAppNames store
+    registerHostName store
+    -- appName <- createLabel "app.name" store
+    -- appID <- createLabel "app.id" store
+    -- host <- getHostName
+    -- name <- getProgName
+    -- id <- getProcessID
+    -- -- Label.set appName $ T.concat [T.pack name, "-", T.pack . show $ id, "@", T.pack host]
+    -- Label.set appName $ T.pack name
+    -- Label.set appID $ T.pack . show $ id
     forkEkgTop def{flushInterval = 60, debug = True} store
     op store
 
