@@ -22,6 +22,8 @@ module System.Remote.Monitoring.Top (
   forkEkgTop,
   TopOptions (..),
   def,
+  Sample,
+  runSample,
 ) where
 
 import Control.Concurrent (ThreadId, forkFinally, myThreadId, throwTo)
@@ -36,6 +38,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO ()
 import Flat (Flat, Generic)
 import Network.Top (
+  App,
   ByType (ByType),
   Connection (output),
   Model,
@@ -59,6 +62,8 @@ instance Model Stats
 instance Flat Value
 
 instance Model Value
+
+type Sample = [(T.Text, Value)]
 
 {- | A handle that can be used to control the Top sync thread.
  Created by 'forkEkgTop'.
@@ -112,7 +117,7 @@ forkEkgTop opts store = do
   return $ Top tid
 
 runSave :: Store -> TopOptions -> IO ()
-runSave store opts = runAppForever def ByType $ \conn -> do
+runSave store opts = runSample $ \conn -> do
   let loop = do
         sample <- M.toList <$> sampleAll store
         when (debug opts) $ print sample
@@ -120,6 +125,9 @@ runSave store opts = runAppForever def ByType $ \conn -> do
         threadDelay (flushInterval opts * 1000000)
         loop
   loop
+
+runSample :: forall r. App Sample r -> IO r
+runSample = runAppForever def ByType
 
 -- r :: IO (Either String [()])
 -- r = run $ recordType (Proxy :: Proxy Value)
