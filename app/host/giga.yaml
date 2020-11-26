@@ -1,0 +1,8 @@
+deploy_path: "/root/app/top-temperature"
+repo: "https://github.com/Quid2/top-apps"
+revision: origin/master
+host: root@giga.quid2.org
+build_script:
+  - /root/.local/bin/stack setup
+  - /root/.local/bin/stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL top-temperature;cd /root/app/top-temperature/current;bin/top-temperature </dev/null >/dev/null 2>&1 &
