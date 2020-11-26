@@ -16,7 +16,6 @@ import System.Metrics (Store, createLabel, newStore)
 import qualified System.Metrics.Counter as Counter
 import qualified System.Metrics.Distribution as Distribution
 import qualified System.Metrics.Label as Label
-
 import System.Remote.Monitoring.Top (
     TopOptions (debug, flushInterval),
     def,
@@ -29,15 +28,7 @@ app op = do
     registerAppMetrics store
     registerAppNames store
     registerHostName store
-    -- appName <- createLabel "app.name" store
-    -- appID <- createLabel "app.id" store
-    -- host <- getHostName
-    -- name <- getProgName
-    -- id <- getProcessID
-    -- -- Label.set appName $ T.concat [T.pack name, "-", T.pack . show $ id, "@", T.pack host]
-    -- Label.set appName $ T.pack name
-    -- Label.set appID $ T.pack . show $ id
-    forkEkgTop def{flushInterval = 60, debug = True} store
+    forkEkgTop def{flushInterval = 60, debug = False} store
     op store
 
 -- host :: IO ()
