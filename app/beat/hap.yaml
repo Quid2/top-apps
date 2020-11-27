@@ -1,0 +1,6 @@
+deploy_path: "/root/app/top-beat"
+repo: "https://github.com/Quid2/top-apps"
+revision: origin/master
+build_script:
+  - cd app/beat;/root/.local/bin/stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL top-beat;cd /root/app/top-beat/current/app/beat;bin/top-beat </dev/null >/dev/null 2>&1 &
