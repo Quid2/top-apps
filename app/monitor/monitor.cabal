@@ -11,6 +11,10 @@ executable top-monitor
     build-depends:
         base -any,
         top,
-        top-apps -any
+        top-apps -any,
+        rio,
+        ekg-core,
+        extra,
+        pipes
 
     ghc-options: -with-rtsopts=-T
