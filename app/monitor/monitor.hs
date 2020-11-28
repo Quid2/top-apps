@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -22,7 +24,7 @@ import System.Time.Extra (
  )
 import Text.Printf (printf)
 
--- data Status = Running | Stopped Sample UTCTime |
+data ServiceStatus = OK | WARN Text | FAIL Text deriving (Show)
 
 data Env = Env {services :: !Services} deriving (Show)
 
@@ -46,43 +48,35 @@ getService s = (\name pid host -> Service name host pid) <$> lbl "app.name" s <*
 t :: IO ()
 t = main
 
--- main :: IO ()
--- main = app $ \_ -> do
---   env <- newEnv
---   runSample loop
---  where
---   loop conn = do
---     sample <- HM.fromList <$> input conn
---     print sample
---     putStrLn . T.unpack . showSample $ sample
---     putStrLn . T.unpack . getHost $ sample
---     loop conn
-
 main :: IO ()
 main = app $ \_ -> do
   let env = newEnv
-  -- If a connection fails, this whole pipe will be restarted
-  -- runSample $ \conn -> runEffect $ pipeIn conn >-> P.map (showSample . HM.fromList) >-> P.take 2 >-> counter 0 >-> P.print
-  runSample $ \conn -> runEffect $ pipeIn conn >-> updateServices HM.empty >-> P.mapM report >-> P.drain
-
-x :: IO ()
-x = run $ \conn -> runEffect $ pipeIn conn >-> P.take 3 >-> P.map (show :: Bool -> String) >-> P.drain
+  -- BUG: If a connection fails, this whole pipe will be restarted (and state is lost) NOT REALLY, CONNECTION IS PRESERVED
+  -- BUG: nothing is displayed if nothing is received (so also failure of contacting network is undetected)
+  runSample $ \conn -> runEffect $ pipeIn conn >-> updateServices HM.empty >-> P.mapM status >-> P.mapM report >-> P.drain
 
 report ss = do
-  putStrLn "\nSeen:"
-  sequence $
-    HM.mapWithKey
-      ( \s (time, _) -> do
-          diff <- since time
-          T.putStrLn $ T.unwords [tshow s, "seen", tshow diff, "ago", if diff > maxWait then "WHAT HAPPENED?" else ""]
-      )
-      ss
+  putStrLn "\nReport:"
+  mapM_ T.putStrLn $ HM.mapWithKey (\s st -> T.unwords [tshow s, ":", tshow st]) ss
+
+status ss =
+  do
+    now <- getCurrentTime
+    let since = diffUTCTime now
+    return $
+      HM.map
+        ( \v@(t, s) ->
+            let memUsedM = gge "app.bytes_used" s
+                diff = since t
+             in case (v, memUsedM) of
+                  (time, _) | diff > maxWait -> FAIL (T.unwords ["last seen", tshow diff, "ago"])
+                  (_, Just memUsed) | memUsed > maxMem -> WARN (T.unwords ["memory used", mem memUsed])
+                  _ -> OK
+        )
+        ss
  where
   maxWait = toEnum $ 120 * 1000000000000
-
-since t = do
-  now <- getCurrentTime
-  return $ diffUTCTime now t
+  maxMem = 20 * 1000000
 
 getServices = HM.keys
 
@@ -100,13 +94,6 @@ counter tot = do
   yield (tot', v)
   counter tot'
 
---  where
---   loop conn = do
---     sample <- HM.fromList <$> input conn
---     print sample
---     putStrLn . T.unpack . showSample $ sample
---     putStrLn . T.unpack . getHost $ sample
-
 showSample :: Sample -> Text
 showSample s =
   let name = (\name pid host -> T.concat [name, "-", pid, "@", host]) <$> lbl "app.name" s <*> lbl "app.pid" s <*> lbl "host.name" s
@@ -115,8 +102,6 @@ showSample s =
       runTime = T.pack . showDuration . (/ 1000) . fromIntegral <$> ctr "app.wall_ms" s
       out = (\name temp time mem -> T.unwords [name, temp, "running for", time, "using", mem]) <$> name <*> temp <*> runTime <*> memUsed
    in chk s out
-
--- getServiceId s = (\name pid host -> T.concat [name, "-", pid, "@", host]) <$> lbl "app.name" s <*> lbl "app.pid" s <*> lbl "host.name" s
 
 getHost :: Sample -> Text
 getHost s =
