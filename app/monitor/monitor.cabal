@@ -15,6 +15,7 @@ executable top-monitor
         rio,
         ekg-core,
         extra,
-        pipes
+        pipes,
+        text
 
     ghc-options: -with-rtsopts=-T

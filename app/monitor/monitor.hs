@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
 import App (app)
+import qualified Data.Text.IO as T
 import Network.Top
 import Network.Top.Pipes
 import qualified Pipes as P
@@ -32,7 +35,13 @@ type Problem = String
 
 type Services = HM.HashMap Service Status
 
-data Service = Service {srvName, srvHost, srvId :: Text} deriving (Eq, Show)
+data Service = Service {srvName, srvHost, srvId :: Text} deriving (Eq, Show, Ord, Generic, Hashable)
+
+-- class TShow a where tshow :: a -> Text
+
+-- instance TShow Service where tshow s = T.concat [srvName s, "-", srvId s, "@", srvHost s]
+
+getService s = (\name pid host -> Service name host pid) <$> lbl "app.name" s <*> lbl "app.pid" s <*> lbl "host.name" s
 
 t :: IO ()
 t = main
@@ -53,10 +62,37 @@ main :: IO ()
 main = app $ \_ -> do
   let env = newEnv
   -- If a connection fails, this whole pipe will be restarted
-  runSample $ \conn -> runEffect $ pipeIn conn >-> P.map (showSample . HM.fromList) >-> P.take 2 >-> counter 0 >-> P.print
+  -- runSample $ \conn -> runEffect $ pipeIn conn >-> P.map (showSample . HM.fromList) >-> P.take 2 >-> counter 0 >-> P.print
+  runSample $ \conn -> runEffect $ pipeIn conn >-> updateServices HM.empty >-> P.mapM report >-> P.drain
 
 x :: IO ()
 x = run $ \conn -> runEffect $ pipeIn conn >-> P.take 3 >-> P.map (show :: Bool -> String) >-> P.drain
+
+report ss = do
+  putStrLn "\nSeen:"
+  sequence $
+    HM.mapWithKey
+      ( \s (time, _) -> do
+          diff <- since time
+          T.putStrLn $ T.unwords [tshow s, "seen", tshow diff, "ago", if diff > maxWait then "WHAT HAPPENED?" else ""]
+      )
+      ss
+ where
+  maxWait = toEnum $ 120 * 1000000000000
+
+since t = do
+  now <- getCurrentTime
+  return $ diffUTCTime now t
+
+getServices = HM.keys
+
+updateServices ss = do
+  sample <- HM.fromList <$> await
+  let Just s = getService sample
+  now <- getCurrentTime
+  let ss' = HM.insert s (now, sample) ss
+  yield ss'
+  updateServices ss'
 
 counter tot = do
   v <- await
@@ -80,6 +116,8 @@ showSample s =
       out = (\name temp time mem -> T.unwords [name, temp, "running for", time, "using", mem]) <$> name <*> temp <*> runTime <*> memUsed
    in chk s out
 
+-- getServiceId s = (\name pid host -> T.concat [name, "-", pid, "@", host]) <$> lbl "app.name" s <*> lbl "app.pid" s <*> lbl "host.name" s
+
 getHost :: Sample -> Text
 getHost s =
   let name = lbl "host.name" s
@@ -99,9 +137,6 @@ lbl name s = HM.lookup name s >>= unLabel
 gge, ctr :: Text -> Sample -> Maybe Int64
 gge name s = HM.lookup name s >>= unGauge
 ctr name s = HM.lookup name s >>= unCounter
-
-class TShow a where tshow :: a -> Text
-instance TShow Service where tshow s = T.concat [srvName s, "-", srvId s, "@", srvHost s]
 
 unLabel :: Value -> Maybe Text
 unLabel (Label l) = Just l
