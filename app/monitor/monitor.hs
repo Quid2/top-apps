@@ -26,21 +26,18 @@ import Text.Printf (printf)
 
 data ServiceStatus = OK | WARN Text | FAIL Text deriving (Show)
 
-data Env = Env {services :: !Services} deriving (Show)
+-- data Env = Env {services :: !Services} deriving (Show)
 
-newEnv :: Env
-newEnv = Env HM.empty
+-- newEnv :: Env
+-- newEnv = Env HM.empty
 
 type Status = (UTCTime, Sample)
-
-type Problem = String
 
 type Services = HM.HashMap Service Status
 
 data Service = Service {srvName, srvHost, srvId :: Text} deriving (Eq, Show, Ord, Generic, Hashable)
 
--- class TShow a where tshow :: a -> Text
-
+-- class TShow a where tshow :: a -> Te
 -- instance TShow Service where tshow s = T.concat [srvName s, "-", srvId s, "@", srvHost s]
 
 getService s = (\name pid host -> Service name host pid) <$> lbl "app.name" s <*> lbl "app.pid" s <*> lbl "host.name" s
@@ -50,9 +47,10 @@ t = main
 
 main :: IO ()
 main = app $ \_ -> do
-  let env = newEnv
+  -- let env = newEnv
   -- BUG: If a connection fails, this whole pipe will be restarted (and state is lost) NOT REALLY, CONNECTION IS PRESERVED
   -- BUG: nothing is displayed if nothing is received (so also failure of contacting network is undetected)
+  -- TODO: send warning via email/sms
   runSample $ \conn -> runEffect $ pipeIn conn >-> updateServices HM.empty >-> P.mapM status >-> P.mapM report >-> P.drain
 
 report ss = do
@@ -75,8 +73,10 @@ status ss =
         )
         ss
  where
-  maxWait = toEnum $ 120 * 1000000000000
-  maxMem = 20 * 1000000
+  maxWait = secs 120
+  maxMem = mb 20
+  secs n = toEnum $ n * 1000000000000
+  mb = (1000000 *)
 
 getServices = HM.keys
 
