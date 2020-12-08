@@ -32,11 +32,12 @@ library
         -- Test
         Sensor.Model
         Sensor
-
+        App.Types
         App
         Stats.App
         Stats.Host
         System.Remote.Monitoring.Top
+
     hs-source-dirs: src, app
     default-language: Haskell2010
     build-depends:
