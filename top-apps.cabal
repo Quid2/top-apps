@@ -142,7 +142,8 @@ executable top-test
         ansi-terminal -any,
         Glob -any,
         http-conduit,
-        pushover
+        pushover,
+        retry
 
 -- executable top-test
 --     main-is: test.hs

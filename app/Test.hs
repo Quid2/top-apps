@@ -18,6 +18,7 @@ import           System.Environment       (getArgs)
 import           System.Timeout           (timeout)
 import           Test.Types               (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                 (wwwTest)
+import Control.Retry 
 
 run :: [Test] -> IO ()
 run tests = do
@@ -41,7 +42,7 @@ notify pushoverUserKey pushoverApiKey msg = do
     let Right apiKey  = makeToken $ fromString pushoverApiKey
 
     print msg
-    r <- sendMessage apiKey userKey (text . fromString . take 256 $ msg)
+    r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey (text . fromString . take 256 $ msg)
     -- TODO: detect pushover failure
     print r
 
