@@ -1,70 +1,64 @@
-module Test where
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TupleSections             #-}
 
-import Control.Concurrent.Async
-import qualified Data.Map as M
-import Data.Maybe
-import Data.String
-import Data.Time.Util
-import Network.HaskellNet.SMTP.SSL
-import Network.Top
-import Repo.Memory
-import System.Environment
-import System.Timeout
+module Test(run,Test,wwwTest) where
 
-t = mapM (test . HTTPTest notNull) ["http://quid2.org", "https://quid2.org", "https://quid2.org/app/ui", "http://kamus.it"]
+import           Control.Concurrent.Async (async, waitCatch)
+import           Control.Monad            (forever, unless, void)
+import qualified Data.ByteString.Char8    as B8
+import qualified Data.Map                 as M
+import           Data.Maybe               (isJust)
+import           Data.String              (IsString (fromString))
+import           Network.Pushover         (makeToken, sendMessage, text)
+import           Network.Top              (async, seconds, threadDelay)
+import           Repo.Memory              ()
+import           System.Environment       (getArgs)
+import           System.Timeout           (timeout)
+import           Test.Types               (Test (check, name, source, timeoutInSecs))
+import           Test.WWW                 (wwwTest)
 
-notNull :: Check
-notNull s = if B8.null s then Just "No content" else Nothing
+run :: [Test] -> IO ()
+run tests = do
+  [pushoverUserKey,pushoverApiKey] <- getArgs
+  -- print [pushoverUserKey,pushoverApiKey]
+  testLoop pushoverUserKey pushoverApiKey tests
 
-class AsTest t where test :: t -> IO (Maybe String)
+testLoop :: [Char] -> [Char] -> [Test] -> IO b
+testLoop pushoverUserKey pushoverApiKey tests = do
 
-type Check = B8.ByteString -> Maybe String
+   forever $ runAll >> threadDelay (seconds 60)
+      where
+        runAll = do
+            failedTests <- filter (isJust . snd) <$> runTests tests
+            unless (null failedTests) $ void $ notify pushoverUserKey pushoverApiKey (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
 
--- data HTTPTest = HTTPTest {check :: Check, req :: Request}
+-- Android notifications via https://pushover.net/
+notify :: [Char] -> [Char] -> [Char] -> IO ()
+notify pushoverUserKey pushoverApiKey msg = do
+    let Right userKey = makeToken $ fromString pushoverUserKey
+    let Right apiKey  = makeToken $ fromString pushoverApiKey
 
-instance Test HTTPTest where
-    test t = do
-        er <- getURL (req t)
-        return $ case er of
-            Left e -> Just (show e)
-            Right c -> check t c
+    print msg
+    r <- sendMessage apiKey userKey (text . fromString . take 256 $ msg)
+    -- TODO: detect pushover failure
+    print r
 
-getURL :: Request -> IO (Either HttpException B8.ByteString)
-getURL url = try $ getResponseBody <$> httpBS url
-
-data Test = Test
-    { name :: String
-    , timeoutInSecs :: Int
-    , source :: IO (Either SomeException B8.ByteString)
-    , check :: Check
-    }
-
+runTests :: Traversable t => t Test -> IO (t (String, Maybe String))
 runTests = mapM runTest
 
+-- Returns (test name ,Nothing if ok or Just error)
 runTest :: Test -> IO (String, Maybe String)
-runTest t =
-    async (timeout (seconds $ timeoutInSecs t) (op t))
-        >>= ((name t,) . chk <$>)
-            . waitCatch
+runTest t = do
+    r <- chk <$> (async (timeout (seconds $ timeoutInSecs t) (source t)) >>= waitCatch)
+    -- print r
+    return $ (name t,) $ case r of
+        Left e  -> Just e
+        Right c -> check t c
+  where
+    -- chk :: Either SomeException (Maybe B8.ByteString) -> Either B8.ByteString B8.ByteString
+    chk (Left exp)       = Left (fromString . show $ exp)
+    chk (Right Nothing)  = Left "Test Timeout"
+    chk (Right (Just s)) = Right s
 
-chk (Right Nothing) = Just "Test timeout"
-chk (Right (Just False)) = Just "Wrong Test Result"
-chk (Right (Just True)) = Nothing
-chk (Left exp) = Just (show exp)
-
-e = email "Trying" "Nothing to see here" "quidagent"
-
-email :: String -> String -> String -> String -> IO ()
-email title body fromGmail fromGmailPwd = do
-    print $ unwords ["EMAIL", title, body]
-    doSMTPSTARTTLSWithSettings
-        "smtp.gmail.com"
-        defaultSettingsSMTPSTARTTLS{sslLogToConsole = False}
-        $ \conn -> do
-            authSucceed <- authenticate PLAIN fromGmail fromGmailPwd conn
-            if authSucceed
-                then do
-                    let from = fromGmail ++ "@gmail.com"
-                    sendPlainTextMail from from title (fromString body) conn
-                    print "EMAIL SENT"
-                else print "EMAIL NOT SENT"
