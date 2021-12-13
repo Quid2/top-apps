@@ -5,20 +5,21 @@
 
 module Test(run,Test,wwwTest) where
 
-import           Control.Concurrent.Async (async, waitCatch)
-import           Control.Monad            (forever, unless, void)
-import qualified Data.ByteString.Char8    as B8
-import qualified Data.Map                 as M
-import           Data.Maybe               (isJust)
-import           Data.String              (IsString (fromString))
-import           Network.Pushover         (makeToken, sendMessage, text)
-import           Network.Top              (async, seconds, threadDelay)
-import           Repo.Memory              ()
-import           System.Environment       (getArgs)
-import           System.Timeout           (timeout)
-import           Test.Types               (Test (check, name, source, timeoutInSecs))
-import           Test.WWW                 (wwwTest)
-import Control.Retry 
+import           Control.Concurrent.Async    (async, waitCatch)
+import           Control.Monad               (forever, unless, void)
+import           Control.Retry               (recoverAll, retryPolicyDefault)
+import qualified Data.ByteString.Char8       as B8
+import qualified Data.Map                    as M
+import           Data.Maybe                  (isJust)
+import           Data.String                 (IsString (fromString))
+import           Network.HTTP.Client.Conduit (Response (responseStatus))
+import           Network.Pushover
+import           Network.Top                 (async, seconds, threadDelay)
+import           Repo.Memory                 ()
+import           System.Environment          (getArgs)
+import           System.Timeout              (timeout)
+import           Test.Types                  (Test (check, name, source, timeoutInSecs))
+import           Test.WWW                    (wwwTest)
 
 run :: [Test] -> IO ()
 run tests = do
@@ -41,10 +42,13 @@ notify pushoverUserKey pushoverApiKey msg = do
     let Right userKey = makeToken $ fromString pushoverUserKey
     let Right apiKey  = makeToken $ fromString pushoverApiKey
 
-    print msg
+    print $ unlines ["Notifying",msg]
     r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey (text . fromString . take 256 $ msg)
-    -- TODO: detect pushover failure
-    print r
+
+    -- FAIL on pushover failure
+    case status r of
+      Success   -> return ()
+      Failure _ -> print $ "EXITING: pushover failure: " ++ show r
 
 runTests :: Traversable t => t Test -> IO (t (String, Maybe String))
 runTests = mapM runTest

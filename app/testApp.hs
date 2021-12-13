@@ -7,7 +7,7 @@ TODO:
 - remove single points of failure:
 -- top-test
 ---  self-test, every app includes its own test
--- pushover app not stared on phone ?
+-- pushover app not started on phone ?
 -- pushover failure (or not accepting notification)
 
 Full test:
@@ -15,7 +15,7 @@ Full test:
 -}
 module Main where
 
-import           Test
+import           Test (run, wwwTest)
 
 main :: IO ()
 main = run $ map wwwTest [("https://quid2.org","Flat"),("http://quid2.org","Flat"),("http://kamus.it/","Assini"),("http://quid2.org/app/ui","channels"),("http://giga.quid2.org/","top-router"),("http://giga.quid2.org:7000/","BLOB")]
