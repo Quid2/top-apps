@@ -1,13 +1,17 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 {- |
 Detect failures of www and top infrastructure and send an alarm in case of failure.
 
 TODO:
+- remove single points of failure:
+-- top-test
+---  self-test, every app includes its own test
+-- pushover app not stared on phone ?
+-- pushover failure (or not accepting notification)
+
+Full test:
 - direct top tests
-- self-test, every app includes its own test
 -}
 module Main where
 
