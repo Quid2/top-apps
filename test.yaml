@@ -1,0 +1,11 @@
+deploy_path: "/root/app/top-test"
+repo: "https://github.com/Quid2/top-apps"
+revision: origin/master
+host: root@nano.quid2.org
+# copy_dirs:
+#   - src: private
+#     dest: private
+build_script:
+  - /root/.local/bin/stack setup
+  - /root/.local/bin/stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL top-test;cd /root/app/top-test/current;bin/top-test </dev/null >/dev/null 2>&1 &

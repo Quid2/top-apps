@@ -8,7 +8,6 @@ module Test(run,Test,wwwTest) where
 import           Control.Concurrent.Async    (async, waitCatch)
 import           Control.Monad               (forever, unless, void)
 import           Control.Retry               (recoverAll, retryPolicyDefault)
-import qualified Data.ByteString.Char8       as B8
 import qualified Data.Map                    as M
 import           Data.Maybe                  (isJust)
 import           Data.String                 (IsString (fromString))
@@ -17,30 +16,34 @@ import           Network.Pushover
 import           Network.Top                 (async, seconds, threadDelay)
 import           Repo.Memory                 ()
 import           System.Environment          (getArgs)
+import           System.Exit                 (ExitCode)
 import           System.Timeout              (timeout)
+import           Test.GPG                    (gpgDecryptValue)
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                    (wwwTest)
 
+data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
+
 run :: [Test] -> IO ()
 run tests = do
-  [pushoverUserKey,pushoverApiKey] <- getArgs
-  -- print [pushoverUserKey,pushoverApiKey]
-  testLoop pushoverUserKey pushoverApiKey tests
+  po <- gpgDecryptValue "PushoverId.gpg"
+  testLoop po tests
 
-testLoop :: [Char] -> [Char] -> [Test] -> IO b
-testLoop pushoverUserKey pushoverApiKey tests = do
+testLoop :: PushoverId -> [Test] -> IO b
+testLoop po tests = do
+   -- print po
 
    forever $ runAll >> threadDelay (seconds 60)
       where
         runAll = do
             failedTests <- filter (isJust . snd) <$> runTests tests
-            unless (null failedTests) $ void $ notify pushoverUserKey pushoverApiKey (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
+            unless (null failedTests) $ void $ notify po (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
 
 -- Android notifications via https://pushover.net/
-notify :: [Char] -> [Char] -> [Char] -> IO ()
-notify pushoverUserKey pushoverApiKey msg = do
-    let Right userKey = makeToken $ fromString pushoverUserKey
-    let Right apiKey  = makeToken $ fromString pushoverApiKey
+notify :: PushoverId -> [Char] -> IO ()
+notify po msg = do
+    let Right userKey = makeToken $ fromString $ user po
+    let Right apiKey  = makeToken $ fromString $ api po
 
     print $ unlines ["Notifying",msg]
     r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey (text . fromString . take 256 $ msg)
@@ -67,4 +70,55 @@ runTest t = do
     chk (Left exp)       = Left (fromString . show $ exp)
     chk (Right Nothing)  = Left "Test Timeout"
     chk (Right (Just s)) = Right s
+
+
+-- import System.Directory
+-- import qualified Control.Exception as E
+
+-- gpgDecrypt :: FilePath -> IO String
+-- gpgDecrypt f = do
+--         gpgbin <- getGpgBin
+--         ifM (doesFileExist f)
+--                 ( writeReadProcessEnv gpgbin ["--decrypt", f] Nothing Nothing Nothing
+--                 , return ""
+--                 )
+
+-- writeReadProcessEnv
+--         :: FilePath
+--         -> [String]
+--         -> Maybe [(String, String)]
+--         -> (Maybe (Handle -> IO ()))
+--         -> (Maybe (Handle -> IO ()))
+--         -> IO String
+-- writeReadProcessEnv cmd args environ writestdin adjusthandle = do
+--         (Just inh, Just outh, _, pid) <- createProcess p
+
+--         maybe (return ()) (\a -> a inh) adjusthandle
+--         maybe (return ()) (\a -> a outh) adjusthandle
+
+--         -- fork off a thread to start consuming the output
+--         output  <- hGetContents outh
+--         outMVar <- newEmptyMVar
+--         _ <- forkIO $ E.evaluate (length output) >> putMVar outMVar ()
+
+--         -- now write and flush any input
+--         maybe (return ()) (\a -> a inh >> hFlush inh) writestdin
+--         hClose inh -- done with stdin
+
+--         -- wait on the output
+--         takeMVar outMVar
+--         hClose outh
+
+--         -- wait on the process
+--         forceSuccessProcess p pid
+
+--         return output
+
+--   where
+--         p = (proc cmd args)
+--                 { std_in = CreatePipe
+--                 , std_out = CreatePipe
+--                 , std_err = Inherit
+--                 , env = environ
+--                 }
 
