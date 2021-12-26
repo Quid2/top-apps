@@ -9,53 +9,39 @@
 module Main where
 
 import           Data.Bifunctor
-import           Data.Foldable                  ( toList )
-import           Data.List                      ( nub
-                                                , partition
-                                                , sort
-                                                , sortBy
-                                                , sortOn
-                                                )
-import qualified Data.ListLike.String          as L
-import qualified Data.Map                      as M
+import           Data.Foldable                        (toList)
+import           Data.List                            (nub, partition, sort,
+                                                       sortBy, sortOn)
+import qualified Data.ListLike.String                 as L
+import qualified Data.Map                             as M
 import           Data.Maybe
 import           Data.Ord
 import           Data.String
-import qualified Data.Text                     as T
+import qualified Data.Text                            as T
 import           Data.Word
 import           Model.Validate
-import           Network.Top             hiding ( recordADT
-                                                , solve
-                                                , (<>)
-                                                )
-import           Network.Top.Repo        hiding ( recordADT )
-import qualified Network.Top.Repo0             as R0
+import           Network.Top                          hiding (recordADT, solve,
+                                                       (<>))
+import           Network.Top.Repo                     hiding (recordADT)
+import qualified Network.Top.Repo0                    as R0
 import qualified Network.Wai
-import qualified Network.Wai.Handler.Warp      as Warp
-import           Network.Wai.Middleware.RequestLogger
-                                                ( logStdoutDev )
+import qualified Network.Wai.Handler.Warp             as Warp
+import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import           Quid2.Util.Service
 import           Repo.Disk.DB
-import           Repo.Types              hiding ( Repo(..) )
-import           System.IO                      ( stdout )
+import           Repo.Types                           hiding (Repo (..))
+import           System.IO                            (stdout)
 import           Text.Blaze.Html.Renderer.Text
-import           Text.Blaze.Html5        hiding ( head
-                                                , html
-                                                , input
-                                                , main
-                                                , map
-                                                , output
-                                                , param
-                                                )
-import           Text.Blaze.Html5.Attributes
-                                         hiding ( async )
+import           Text.Blaze.Html5                     hiding (head, html, input,
+                                                       main, map, output, param)
+import           Text.Blaze.Html5.Attributes          hiding (async)
 import           Text.PrettyPrint
 import           Util
 import           Web.Scotty
-import qualified ZM.Parser                     as P
-import           ZM.To.ZMT                      ( generate )
+import qualified ZM.Parser                            as P
+import           ZM.To.ZMT                            (generate)
 import           ZM.Type.Repo
-import qualified ZM.Type.String                as Z
+import qualified ZM.Type.String                       as Z
 
 data MyConfig =
   MyConfig
@@ -64,7 +50,7 @@ data MyConfig =
     }
   deriving (Show, Read)
 
-main = initService "top-repo2" setup
+main = initService "top-repo" setup
 
 t = absTypeModel (Proxy :: Proxy Bool)
 
