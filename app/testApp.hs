@@ -6,9 +6,6 @@ Detect failures of www and top infrastructure and send an alarm in case of failu
 TODO:
 - remove single points of failure:
 -- top-test
----  self-test, every app includes its own test
--- pushover app not started on phone ?
--- pushover failure (or not accepting notification)
 
 Full test:
 - direct top tests
@@ -18,4 +15,4 @@ module Main where
 import           Test (run, wwwTest)
 
 main :: IO ()
-main = run $ map wwwTest [("https://quid2.org","Flat"),("http://quid2.org","Flat"),("http://kamus.it/","Assini"),("http://quid2.org/app/ui","channels"),("http://giga.quid2.org/","top-router"),("http://giga.quid2.org:7000/","BLOB")]
+main = run $ map wwwTest [("https://quid2.org","Flat"),("http://quid2.org","Flat"),("http://kamus.it/","Assini"),("http://quid2.org/app/ui","channels"),("http://vip.quid2.org/","top-router"),("http://vip.quid2.org:7000/","BLOB")]
