@@ -22,8 +22,9 @@ extra-deps:
   - github: Quid2/top
     commit: 0f8dfa54d977053d02396e914c00b84cc1c1c498
 
-  # - github: Quid2/zm-language
-  #   commit: a80ce3944d0d590d189f36f7be58bb1b081b6b6e
+  - github: Quid2/zm-language
+    # commit: a80ce3944d0d590d189f36f7be58bb1b081b6b6e
+    commit: 632315ffd2022aa8c0e0eef254a58cf87db11c91
 
   - Unique-0.4.7.7@sha256:2269d3528271e25d34542e7c24a4e541e27ec33460e1ea00845da95b82eec6fa,2777
   - acid-state-0.16.0.1@sha256:d43f6ee0b23338758156c500290c4405d769abefeb98e9bc112780dae09ece6f,6207
