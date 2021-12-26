@@ -170,7 +170,7 @@ executable top-test
 --         ansi-terminal -any,
 --         Glob -any
 
-executable top-repo2
+executable top-repo
     main-is: adtrepo.hs
     hs-source-dirs: app src
     other-modules:
