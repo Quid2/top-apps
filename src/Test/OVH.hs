@@ -2,62 +2,32 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Test.OVH where
 
-import           Data.Aeson
-import           Data.String          (IsString (fromString))
-import           Test.WWW             (getURL)
-
+import           Data.Aeson           (FromJSON, ToJSON (toEncoding), decode,
+                                       defaultOptions, genericToEncoding)
 import           Data.ByteString.Lazy (fromStrict)
-import           Data.Maybe
+import           Data.Maybe           (fromJust)
+import           Data.String          (IsString (fromString))
 import           Data.Text            (Text)
-import           GHC.Generics
+import           GHC.Generics         (Generic)
 import           Network.HTTP.Conduit (Request, parseRequest)
-import           Test.Types
-import           Test.WWW
+import           Test.Types           (ByteString, Test (Test))
+import           Test.WWW             (getURL)
 import           Text.Show.Pretty     (pPrint)
 
-{-
-Kimsufi:
-Name Code
-KS-1 2201sk010
-KS-2 2201sk011
-KS-3 2201sk012
-KS-17 2201sk081
--}
-ovhTest srv = Test ("Test OVH server " ++ srv) 30 (parseRequest (ksURL srv) >>= getURL) (availableServer srv)
+servers = [("KS-1","2201sk010"),("KS-2","2201sk011"),("KS-3","2201sk012"),("KS-16","2201sk080"),("KS-17","2201sk081")]
 
--- ovhTest srv = wwwTest (availableServer srv)
+ovhTest :: String -> Test
+ovhTest srvName = let Just srv = lookup srvName servers in Test ("Test OVH server " ++ srvName) 30 (parseRequest (ksURL srv) >>= getURL) (availableServer srv)
 
+availableServer :: String -> ByteString -> Maybe String
 availableServer srv r =
-    if isAvailable . fromJust $ (decode (fromStrict r) :: Maybe [Region]) then Just (unwords ["server",srv,"is available"]) else Nothing
+    if isAvailable . fromJust $ (decode (fromStrict r) :: Maybe [Region]) then Just "server is available" else Nothing
 
--- k :: IO (Maybe Value)
-k :: IO ()
-k = do
-    Just srv <-  ks_ "2201sk080" -- "2201sk010" --
-    pPrint srv
-    print $ isAvailable srv
-    -- pPrint (decode r :: Maybe [Region])
-
-ks :: String -> IO Bool
-ks srv = do
-    Just rs <- ks_ srv
-    return $ isAvailable rs
-
-
-ks_ :: String -> IO (Maybe [Region])
-ks_ srv = do
-    r <- getURL $ fromString $ "https://api.ovh.com/1.0/dedicated/server/availabilities?country=IT&hardware="++srv
-    return $ decode (fromStrict r)
-
-ksURL srv = fromString $ "https://api.ovh.com/1.0/dedicated/server/availabilities?country=IT&hardware="++srv
-
+ksURL :: IsString a => [Char] -> a
+ksURL srv = fromString $ "https://api.ovh.com/1.0/dedicated/server/availabilities?country=it&hardware="++srv
 
 isAvailable :: [Region] -> Bool
-isAvailable = any ( (/= "unavailable") . availability) . datacenters . head . filter ((== "europe") . region)
-
--- getAvailabilities = id
-
--- isEurope ds = withObject "datacenters" $ \o -> o .: "region"
+isAvailable = any ( (/= "unavailable") . availability) . concatMap datacenters  . filter ((`elem` ["europe","northAmerica"]) . region)
 
 data Datacenter = Datacenter {
       availability :: Text
@@ -77,3 +47,19 @@ data Region = Region {
 instance ToJSON Region where toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON Region
+
+-- Test
+
+k :: IO ()
+k = do
+    let srv = "2201sk081" -- "2201sk010" --
+    Just rs <-   ks_ srv
+    let rs' = filter ((== fromString srv) . hardware) rs
+    pPrint rs'
+    print $ isAvailable rs'
+    -- pPrint (decode r :: Maybe [Region])
+
+ks_ :: String -> IO (Maybe [Region])
+ks_ srv = do
+    r <- getURL $ ksURL srv
+    return $ decode (fromStrict r)

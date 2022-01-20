@@ -1,8 +1,6 @@
-{-# LANGUAGE TupleSections #-}
-module Test.Types where
+module Test.Types(B8.ByteString,Test(..),Check) where
 
-import qualified Data.ByteString.Char8    as B8
-import           Data.String
+import qualified Data.ByteString.Char8 as B8
 
 data Test = Test
     { name          :: String
@@ -14,8 +12,6 @@ data Test = Test
 
 -- Return Nothing is result is OK or Just <error-message> in case of error
 type Check = B8.ByteString -> Maybe String
-
-
 
 -- class AsTest t where test :: t -> IO (Maybe String)
 -- instance Default where
