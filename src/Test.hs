@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TupleSections             #-}
 
-module Test(run,Test,wwwTest) where
+module Test(run,Test,wwwTest,wwwTest_,notContains,ovhTest) where
 
 import           Control.Concurrent.Async    (async, waitCatch)
 import           Control.Monad               (forever, unless, void)
@@ -19,8 +19,9 @@ import           System.Environment          (getArgs)
 import           System.Exit                 (ExitCode)
 import           System.Timeout              (timeout)
 import           Test.GPG                    (gpgDecryptValue)
+import           Test.OVH
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
-import           Test.WWW                    (wwwTest)
+import           Test.WWW                    (notContains, wwwTest, wwwTest_)
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 

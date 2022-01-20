@@ -10,6 +10,7 @@ import           System.Process.Typed       (readProcess)
 gpgDecryptValue :: Read a => FilePath -> IO a
 gpgDecryptValue f = read . L8.unpack . head . L8.lines <$> gpgDecrypt f
 
+-- Assumes that private key of receiver is present on host
 gpgDecrypt :: FilePath  -> IO ByteString
 gpgDecrypt f = do
     (exitCode, out, err) <- readProcess $ fromString $ "gpg --openpgp --decrypt " ++ f

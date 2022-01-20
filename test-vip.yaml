@@ -1,0 +1,8 @@
+deploy_path: "/home/ubuntu/app/top-test"
+repo: "https://github.com/Quid2/top-apps"
+revision: origin/master
+host: ubuntu@vip.quid2.org
+build_script:
+  - stack setup
+  - stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL top-test;cd /home/ubuntu/app/top-test/current;bin/top-test </dev/null >/dev/null 2>&1 &
