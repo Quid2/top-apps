@@ -21,5 +21,5 @@ import           Test
 main :: IO ()
 -- main = run [ovhTest "KS-17"] --
 
-
-main = run $ [ovhTest "KS-1",ovhTest "KS-2"] ++ map wwwTest [("https://quid2.org","Flat"),("http://quid2.org","Flat"),("http://kamus.it/","Assini"),("http://quid2.org/app/ui","channels"),("http://vip.quid2.org/","top-router"),("http://vip.quid2.org:7000/","BLOB")]
+-- [ovhTest "KS-1",ovhTest "KS-2"] ++ 
+main = run $ map wwwTest [("https://quid2.org","Flat"),("http://quid2.org","Flat"),("http://kamus.it/","Assini"),("http://quid2.org/app/ui","channels"),("http://vip.quid2.org/","top-router"),("http://vip.quid2.org:7000/","BLOB")]
