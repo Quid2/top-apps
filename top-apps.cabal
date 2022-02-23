@@ -29,10 +29,11 @@ library
         Model.StoreProtocol
         Quid2.Util.Dir
         Quid2.Util.Service
-        -- Test
         Sensor.Model
         Sensor
         App.Types
+        Test Test.GPG Test.OVH Test.Types Test.WWW
+
         -- App
         -- Stats.App
         -- Stats.Host
@@ -64,7 +65,6 @@ library
         Glob -any,
         loglevel,
         async -any,
-        --  HaskellNet-SSL -any,
         ekg-core,
         disk-free-space,
         flat,
@@ -74,8 +74,13 @@ library
         -- system-linux-proc,
         hostname,
         process,
-        regex-tdfa
-
+        typed-process,
+        http-conduit,
+        regex-tdfa,
+        aeson,
+        retry,
+        pretty-show,
+        pushover
 
 executable top-test
     main-is: testApp.hs
@@ -90,7 +95,7 @@ executable top-test
         base -any,
         bytestring -any,
         containers -any,
-        HaskellNet-SSL -any,
+        -- HaskellNet-SSL -any,
         hslogger -any,
         pretty -any,
         text -any,
