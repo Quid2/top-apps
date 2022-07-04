@@ -44,8 +44,9 @@ testLoop po tests = do
    -- forever $ runAll
   mapM_ (runAll hname) [0..] 
       where
+        hour = 60
         runAll hname i = do
-            when (i `mod` 60*24 == 0) $ notify po Lowest $ concat ["test@",hname," running"]
+            when (i `mod` (12*hour) == 0) $ notify po Lowest $ concat ["test@",hname," running"]
             failedTests <- filter (isJust . snd) <$> runTests tests
             unless (null failedTests) $ void $ notify po Emergency (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
             threadDelay (seconds 60)
