@@ -13,7 +13,7 @@ gpgDecryptValue f = read . L8.unpack . head . L8.lines <$> gpgDecrypt f
 -- Assumes that private key of receiver is present on host
 gpgDecrypt :: FilePath  -> IO ByteString
 gpgDecrypt f = do
-    (exitCode, out, err) <- readProcess $ fromString $ "gpg --openpgp --decrypt " ++ f
+    (exitCode, out, err) <- readProcess $ fromString $ "gpg --quiet --openpgp --decrypt " ++ f
     -- print (exitCode :: ExitCode)
     -- print (out :: ByteString)
     -- print (err :: ByteString)
