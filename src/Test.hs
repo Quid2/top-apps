@@ -24,6 +24,7 @@ import           Test.OVH
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                    (notContains, wwwTest, wwwTest_)
 import Network.HostName
+import Control.Monad
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 
@@ -32,19 +33,22 @@ t = run $ map wwwTest [("https://quid2.org","Flat")]
 run :: [Test] -> IO ()
 run tests = do
   po <- gpgDecryptValue "PushoverId.gpg"
-  name <- getHostName
-  notify po Lowest $ concat ["test@",name," started"]
+  -- notify po Lowest $ concat ["test@",name," started"]
   testLoop po tests
 
-testLoop :: PushoverId -> [Test] -> IO b
+testLoop :: PushoverId -> [Test] -> IO ()
 testLoop po tests = do
-   -- print po
+   -- print po 
+  hname <- getHostName
 
-   forever $ runAll >> threadDelay (seconds 60)
+   -- forever $ runAll
+  mapM_ (runAll hname) [0..] 
       where
-        runAll = do
+        runAll hname i = do
+            when (i `mod` 60*24 == 0) $ notify po Lowest $ concat ["test@",hname," running"]
             failedTests <- filter (isJust . snd) <$> runTests tests
             unless (null failedTests) $ void $ notify po Emergency (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
+            threadDelay (seconds 60)
 
 -- Android notifications via https://pushover.net/
 notify :: PushoverId -> Priority -> String -> IO ()
