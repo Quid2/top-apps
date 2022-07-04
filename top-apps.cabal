@@ -111,6 +111,7 @@ executable top-test
         retry,
         typed-process,
         aeson,
+        hostname,
         pretty-show
 
 -- executable top-repo

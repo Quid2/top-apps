@@ -13,6 +13,7 @@ import           Data.Maybe                  (isJust)
 import           Data.String                 (IsString (fromString))
 import           Network.HTTP.Client.Conduit (Response (responseStatus))
 import           Network.Pushover
+import           Network.Pushover.Request    (Request (priority))
 import           Network.Top                 (async, seconds, threadDelay)
 import           Repo.Memory                 ()
 import           System.Environment          (getArgs)
@@ -22,6 +23,7 @@ import           Test.GPG                    (gpgDecryptValue)
 import           Test.OVH
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                    (notContains, wwwTest, wwwTest_)
+import Network.HostName
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 
@@ -30,7 +32,8 @@ t = run $ map wwwTest [("https://quid2.org","Flat")]
 run :: [Test] -> IO ()
 run tests = do
   po <- gpgDecryptValue "PushoverId.gpg"
-  print "Got secrets"
+  name <- getHostName
+  notify po Lowest $ concat ["test@",name," started"]
   testLoop po tests
 
 testLoop :: PushoverId -> [Test] -> IO b
@@ -41,16 +44,18 @@ testLoop po tests = do
       where
         runAll = do
             failedTests <- filter (isJust . snd) <$> runTests tests
-            unless (null failedTests) $ void $ notify po (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
+            unless (null failedTests) $ void $ notify po Emergency (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
 
 -- Android notifications via https://pushover.net/
-notify :: PushoverId -> [Char] -> IO ()
-notify po msg = do
+notify :: PushoverId -> Priority -> String -> IO ()
+notify po pri msg = do
     let Right userKey = makeToken $ fromString $ user po
     let Right apiKey  = makeToken $ fromString $ api po
 
-    print $ unlines ["Notifying",msg]
-    r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey (text . fromString . take 256 $ msg)
+    print $ unlines ["Notifying: ",msg]
+    let msg' = text . fromString . take 256 $ msg
+    -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
+    r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (createRequest apiKey userKey msg') {priority=Just pri}
 
     -- FAIL on pushover failure
     case status r of
