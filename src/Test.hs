@@ -25,9 +25,12 @@ import           Test.WWW                    (notContains, wwwTest, wwwTest_)
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 
+t = run $ map wwwTest [("https://quid2.org","Flat")]
+
 run :: [Test] -> IO ()
 run tests = do
   po <- gpgDecryptValue "PushoverId.gpg"
+  print "Got secrets"
   testLoop po tests
 
 testLoop :: PushoverId -> [Test] -> IO b
