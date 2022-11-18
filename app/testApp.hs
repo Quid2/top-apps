@@ -5,6 +5,7 @@ Detect failures of www and top infrastructure and send an alarm in case of failu
 
 TODO:
 - remove single points of failure:
+simpossibility to connect with pushover
 
 Full test:
 - direct top tests
@@ -17,6 +18,8 @@ import           Test
 >>> 3 + 3
 -}
 
+t = run $ [wwwTest ("http://vip.quid2.org/","top-router")]
+
 main :: IO ()
 -- main = run [ovhTest "KS-17"] --
 -- [ovhTest "KS-1",ovhTest "KS-2"] ++
@@ -28,6 +31,7 @@ main = run $ map wwwTest $
         ,("http://massimoassini.quicquid.org/","Massimo Assini")
         ,("http://quid2.org/app/ui","channels")
         ,("http://quid2.net/","top-router")
-        ,("http://quid2.net:7000/","BLOB")
-        ,("http://vip.quid2.org/","top-router")
-        ,("http://vip.quid2.org:7000/","BLOB")]
+        ,("http://quid2.net:7000/","ADT")
+        ,("http://net.quid2.org/","top-router")
+        ,("http://net.quid2.org:7000/","ADT")
+        ]

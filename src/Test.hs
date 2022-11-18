@@ -7,10 +7,13 @@ module Test(run,Test,wwwTest,wwwTest_,notContains,ovhTest) where
 
 import           Control.Concurrent.Async    (async, waitCatch)
 import           Control.Monad               (forever, unless, void)
-import           Control.Retry               (recoverAll, retryPolicyDefault)
+import           Control.Monad
+import           Control.Retry               (recoverAll, retryPolicy,
+                                              retryPolicyDefault)
 import qualified Data.Map                    as M
 import           Data.Maybe                  (isJust)
 import           Data.String                 (IsString (fromString))
+import           Network.HostName
 import           Network.HTTP.Client.Conduit (Response (responseStatus))
 import           Network.Pushover
 import           Network.Pushover.Request    (Request (priority))
@@ -23,13 +26,12 @@ import           Test.GPG                    (gpgDecryptValue)
 import           Test.OVH
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                    (notContains, wwwTest, wwwTest_)
-import Network.HostName
-import Control.Monad
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 
 t = run $ map wwwTest [("https://quid2.org","Flat")]
 
+-- NOTE: Need to `make mov` to transfer decoding key
 run :: [Test] -> IO ()
 run tests = do
   po <- gpgDecryptValue "PushoverId.gpg"
@@ -38,17 +40,17 @@ run tests = do
 
 testLoop :: PushoverId -> [Test] -> IO ()
 testLoop po tests = do
-   -- print po 
+   -- print po
   hname <- getHostName
 
    -- forever $ runAll
-  mapM_ (runAll hname) [0..] 
+  mapM_ (runAll hname) [0..]
       where
         hour = 60
         runAll hname i = do
             when (i `mod` (12*hour) == 0) $ notify po Lowest $ concat ["test@",hname," running"]
             failedTests <- filter (isJust . snd) <$> runTests tests
-            unless (null failedTests) $ void $ notify po Emergency (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
+            unless (null failedTests) $ void $ notify po High (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
             threadDelay (seconds 60)
 
 -- Android notifications via https://pushover.net/
@@ -60,6 +62,9 @@ notify po pri msg = do
     print $ unlines ["Notifying: ",msg]
     let msg' = text . fromString . take 256 $ msg
     -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
+
+    -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)
+    -- that do not seem to be supported by https://hackage.haskell.org/package/pushover
     r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (createRequest apiKey userKey msg') {priority=Just pri}
 
     -- FAIL on pushover failure
