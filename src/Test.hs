@@ -41,16 +41,15 @@ run tests = do
 testLoop :: PushoverId -> [Test] -> IO ()
 testLoop po tests = do
    -- print po
-  hname <- getHostName
 
    -- forever $ runAll
-  mapM_ (runAll hname) [0..]
+  mapM_ runAll [0..]
       where
         hour = 60
-        runAll hname i = do
-            when (i `mod` (12*hour) == 0) $ notify po Lowest $ concat ["test@",hname," running"]
+        runAll i = do
+            when (i `mod` (12*hour) == 0) $ notify po Lowest "running"
             failedTests <- filter (isJust . snd) <$> runTests tests
-            unless (null failedTests) $ void $ notify po High (show . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
+            unless (null failedTests) $ void $ notify po High (show  . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
             threadDelay (seconds 60)
 
 -- Android notifications via https://pushover.net/
@@ -59,8 +58,11 @@ notify po pri msg = do
     let Right userKey = makeToken $ fromString $ user po
     let Right apiKey  = makeToken $ fromString $ api po
 
-    print $ unlines ["Notifying: ",msg]
-    let msg' = text . fromString . take 256 $ msg
+    hname <- getHostName
+    let me = "test@" ++ hname
+
+    -- print $ unlines ["Notifying: ",msg]
+    let msg' = text . fromString . take 256 $ concat[me,": ",msg]
     -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
 
     -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)

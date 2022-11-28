@@ -5,10 +5,12 @@ Detect failures of www and top infrastructure and send an alarm in case of failu
 
 TODO:
 - remove single points of failure:
-simpossibility to connect with pushover
+impossibility to connect with pushover (api changes)
 
 Full test:
 - direct top tests
+
+NOTE: report only first failure
 -}
 module Main where
 
@@ -18,7 +20,7 @@ import           Test
 >>> 3 + 3
 -}
 
-t = run $ [wwwTest ("http://vip.quid2.org/","top-router")]
+t = run [wwwTest ("http://vip.quid2.org/","top-router")]
 
 main :: IO ()
 -- main = run [ovhTest "KS-17"] --
