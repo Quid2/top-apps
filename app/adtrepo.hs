@@ -79,6 +79,7 @@ showDB db = do
   DBState db <- wholeDB db
   return $ dbElems db
 
+
 pp = do
   run $ recordType (Proxy :: Proxy ((), (), ()))
   run $ recordType (Proxy :: Proxy ((), (), (), ()))
@@ -186,7 +187,7 @@ validateZMFun (Validate sc@(SourceCode ZM (Z.String s))) = return $ errs s
       . P.parseADTs
 
 -- solveRef :: DB -> (Solve AbsRef) -> IO (Either Z.String AbsADT)
-solveRefFun :: DB -> (Solve AbsRef AbsADT) -> IO AbsADT
+solveRefFun :: DB -> Solve AbsRef AbsADT -> IO AbsADT
 solveRefFun db (Solve ref) = do
   madt <- getDB db ref
   case madt of
@@ -212,7 +213,7 @@ recordADT db adt = putDB db (absRef adt) adt -- do
 -- Record a definition
 inDB db rs =
   lift
-    $   (\(ps, as) -> (map (second fromJust) ps, map fst as))
+    $   bimap (map (second fromJust)) (map fst)
     .   partition (isJust . snd)
     <$> mapM (\r -> (r, ) <$> getDB db r) rs
 
