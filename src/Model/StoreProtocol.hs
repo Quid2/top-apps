@@ -7,6 +7,8 @@ import qualified Data.ByteString as B
 import           Network.Top     hiding (solve)
 
 -- import ZM hiding (solve)
+
+-- Publish model
 x = runApp def ByType $ recordType (Proxy :: Proxy ValueStoreProtocol)
 
 -- data ValueStoreProtocol = ValueStoreProtocol (StoreProtocol TypedBLOB) deriving (Eq, Ord, Show, Generic, Flat)
