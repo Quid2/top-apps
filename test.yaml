@@ -1,10 +1,20 @@
+# Requires secret key installed, see "make mov"
 deploy_path: "/home/ubuntu/app/top-test"
 repo: "https://github.com/Quid2/top-apps"
 revision: origin/master
 targets:
-  - host: ubuntu@nano.quid2.org
-  - host: ubuntu@vip.quid2.org
+  - host: ubuntu@net.quid2.org
+  # - host: ubuntu@nano.quid2.org
 build_script:
-  - stack setup
-  - stack build --local-bin-path bin --copy-bins
+  # requires .ghcup/bin on PATH
+  # - echo $PATH
+  # - ghc --version
+  - sudo apt install zlib1g-dev
+  # - stack setup
+  # - stack build --local-bin-path bin --copy-bins
+
+  # works with 9.4.7 and 8.10.7
+  - cabal update
+  - cabal build
+  - cabal install --bindir ./bin
 restart_command: sudo killall --quiet --signal SIGKILL top-test;cd /home/ubuntu/app/top-test/current;bin/top-test </dev/null >/dev/null 2>&1 &
