@@ -1,9 +1,9 @@
 cabal-version:      >=1.10
 name:               top-apps
-version:            0.1.9
+version:            0.1.11
 license:            BSD3
 license-file:       LICENSE
-copyright:          Copyright: (c) 2016-2020 Pasqualino `Titto` Assini
+copyright:          Copyright: (c) 2016-2024 Pasqualino `Titto` Assini
 maintainer:         tittoassini@gmail.com
 author:             Pasqualino `Titto` Assini
 tested-with:        GHC ==7.10.3 || ==8.0.2 || ==8.2.2
@@ -14,9 +14,7 @@ synopsis:
 description:        See the <http://github.com/Quid2/top-apps online tutorial>.
 category:           Network, Cloud, Distributed Computing
 build-type:         Simple
-extra-source-files:
-  stack.yaml
-  README.md
+extra-source-files: README.md
 
 source-repository head
   type:     git
