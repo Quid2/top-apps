@@ -1,8 +1,8 @@
-deploy_path: "/root/app/top-repo2"
+deploy_path: "/home/ubuntu/app/top-repo"
 repo: "https://github.com/Quid2/top-apps"
 revision: origin/master
-host: root@giga.quid2.org
+host: ubuntu@net.quid2.org
 build_script:
-  - /usr/local/bin/stack setup
-  - /usr/local/bin/stack build --local-bin-path bin --copy-bins
-restart_command: killall --quiet --signal SIGKILL top-repo2;cd /root/app/top-repo2/current;bin/top-repo2 </dev/null >/dev/null 2>&1 &
+  - stack setup
+  - stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL top-repo;cd /home/ubuntu/app/top-repo/current;bin/top-repo </dev/null >/dev/null 2>&1 &
