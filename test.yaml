@@ -14,7 +14,7 @@ build_script:
   # - stack build --local-bin-path bin --copy-bins
 
   # works with 9.4.7 and 8.10.7
-  - cabal update
+  # - cabal update
   - cabal build
   - cabal install --bindir ./bin
 restart_command: sudo killall --quiet --signal SIGKILL top-test;cd /home/ubuntu/app/top-test/current;bin/top-test </dev/null >/dev/null 2>&1 &
