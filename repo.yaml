@@ -2,10 +2,9 @@ deploy_path: "/home/ubuntu/app/top-repo"
 repo: "https://github.com/Quid2/top-apps"
 revision: origin/master
 host: ubuntu@net.quid2.org
+linked_dirs:
+  - state
 build_script:
-  # - stack setup
-  # - stack build --local-bin-path bin --copy-bins
   # - cabal update
-  - cabal build
-  - cabal install --bindir ./bin
+  - cabal install --installdir ./bin
 restart_command: killall --quiet --signal SIGKILL top-repo;cd /home/ubuntu/app/top-repo/current;bin/top-repo </dev/null >/dev/null 2>&1 &
