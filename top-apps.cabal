@@ -1,6 +1,6 @@
 cabal-version:      >=1.10
 name:               top-apps
-version:            0.1.11
+version:            0.1.13
 license:            BSD3
 license-file:       LICENSE
 copyright:          Copyright: (c) 2016-2024 Pasqualino `Titto` Assini
@@ -31,11 +31,11 @@ library
     Quid2.Util.Service
     Sensor
     Sensor.Model
-    Test
-    Test.GPG
-    Test.OVH
-    Test.Types
-    Test.WWW
+    -- Test
+    -- Test.GPG
+    -- Test.OVH
+    -- Test.Types
+    -- Test.WWW
 
   -- App
   -- Stats.App
@@ -67,7 +67,6 @@ library
     , loglevel
     , pretty-show
     , process
-    , pushover
     , regex-tdfa
     , retry
     , rio
@@ -81,10 +80,13 @@ library
     , utf8-string
     , zm
 
+-- , pushover
 -- >=0.2.2 && <0.3,
 --  >=0.3 && <0.4,
 -- zm-language -any,
 -- system-linux-proc,
+
+-- TODO : move this to a separate directory
 executable top-test
   main-is:          testApp.hs
   hs-source-dirs:   app src
