@@ -27,7 +27,7 @@ main :: IO ()
 -- [ovhTest "KS-1",ovhTest "KS-2"] ++
 
 main = run $ map wwwTest $
-    map (\n -> ("http://"++ n,"Flat")) ["quid2.biz","quid2.com","quid2.info","quid2.org","quicquid.org","golo.so"]
+    map (\n -> ("http://"++ n,"Flat")) ["quid2.biz","quid2.com","quid2.info","quid2.org","golo.so"] -- ,"quicquid.org"
     ++ [("https://quid2.org","Flat")
         ,("http://kamus.it/","Assini")
         -- ,("http://massimoassini.quicquid.org/","Massimo Assini")
