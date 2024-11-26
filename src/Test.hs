@@ -2,17 +2,19 @@
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TupleSections             #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use replicateM" #-}
 
 module Test(run,Test,wwwTest,wwwTest_,notContains,ovhTest) where
 
 import           Control.Concurrent.Async    (async, waitCatch)
-import           Control.Monad               (forever, unless, void)
 import           Control.Monad
 import           Control.Retry               (recoverAll, retryPolicy,
                                               retryPolicyDefault)
 import qualified Data.Map                    as M
 import           Data.Maybe                  (isJust)
 import           Data.String                 (IsString (fromString))
+import           GHC.Arr                     (badSafeIndex)
 import           Network.HostName
 import           Network.HTTP.Client.Conduit (Response (responseStatus))
 import           Network.Pushover
@@ -26,10 +28,11 @@ import           Test.GPG                    (gpgDecryptValue)
 import           Test.OVH
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                    (notContains, wwwTest, wwwTest_)
+import           Util
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 
-t = run $ map wwwTest [("https://quid2.org","Flat")]
+t = run $ [wwwTest ("https://quid2.org","Flat")]
 
 -- NOTE: Need to `make mov` to transfer decoding key
 run :: [Test] -> IO ()
@@ -62,7 +65,7 @@ notify po pri msg = do
     let me = "test@" ++ hname
 
     -- print $ unlines ["Notifying: ",msg]
-    let msg' = text . fromString . take 256 $ concat[me,": ",msg]
+    let msg' = text . fromString . take 256 $ concat [me,": ",msg]
     -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
 
     -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)
@@ -77,12 +80,34 @@ notify po pri msg = do
 runTests :: Traversable t => t Test -> IO (t (String, Maybe String))
 runTests = mapM runTest
 
+{-
+>>> sequence [return $ Just "ok",return $ Just "badSafeIndex"]
+Just ["ok","badSafeIndex"]
+
+>>> sequence [Just "ok",Just "badSafeIndex",Nothing]
+Nothing
+-}
 -- Returns (test name ,Nothing if ok or Just error)
 runTest :: Test -> IO (String, Maybe String)
-runTest t = do
+-- runTest t = do
+--   rs <- sequence <$> replicateM 3 (runTest_ t)
+--   return (name t, head <$> rs)
+
+-- r t = (name t,) <$> go 2
+runTest t = (name t,) <$> go 2
+ where
+   go 0 = runTest_ t
+   go n  = do
+    rt <- runTest_ t
+    case rt of
+      Nothing -> return Nothing
+      Just _  -> threadDelay (secs 30) >> go (n-1)
+
+runTest_ :: Test -> IO (Maybe String)
+runTest_ t = do
     r <- chk <$> (async (timeout (seconds $ timeoutInSecs t) (source t)) >>= waitCatch)
     -- print r
-    return $ (name t,) $ case r of
+    return $ case r of
         Left e  -> Just e
         Right c -> check t c
   where

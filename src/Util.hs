@@ -10,4 +10,10 @@ requestLogger :: (MonadIO m, Show a1, Show a2, Show a3) => a1 -> a2 -> a3 -> m (
 requestLogger req status maybeL =
   dbg ["Request:", show req, show status, show maybeL]
 
+msecs t = t * 1000
+
+secs t = t * msecs 1000
+
+minutes t = t * secs 60
+
 
