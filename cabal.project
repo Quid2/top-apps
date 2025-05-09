@@ -1,6 +1,4 @@
 
--- packages: . ../model ../flat ../zm ../zm-language ../top
-
 packages: .
 
 -- tests: true 
@@ -13,15 +11,20 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/Quid2/zm
-    tag: 76474842efbd7d40ce5b2cb4b3b67e74852c91ea
+    tag: b8b365a
 
 source-repository-package
     type: git
     location: https://github.com/Quid2/zm-language
-    tag: a84b840
+    tag: 2f428eb
 
 source-repository-package
     type: git
     location: https://github.com/Quid2/top
-    tag: 6f68a13
+    tag: b2b0089
+
+source-repository-package
+    type: git
+    location: https://github.com/dustin/pushover-hs
+    tag: 9665551
 
