@@ -79,8 +79,7 @@ library
     , unordered-containers
     , utf8-string
     , zm
-
--- , pushover
+    , pushover-hs
 -- >=0.2.2 && <0.3,
 --  >=0.3 && <0.4,
 -- zm-language -any,
@@ -113,7 +112,7 @@ executable top-test
     , http-conduit
     , pretty
     , pretty-show
-    , pushover
+    , pushover-hs
     , retry
     , text
     , top
