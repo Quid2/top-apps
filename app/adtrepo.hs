@@ -6,6 +6,10 @@
 {-# LANGUAGE TypeFamilies              #-}
 
 -- | Repository of absolute data types with an embedded web interface to browse data types and access the Haskell/JS ... equivalents
+
+{-
+TODO: add periodic git checkin of data on backup server (github)
+-}
 module Main where
 
 import           Data.Bifunctor
@@ -110,7 +114,7 @@ wwwUI db = do
         return . renderHtml . dbIndex $ db
       html lst
     get "/type/:typeCode" $ do
-      key <- AbsRef . unPrettyRef <$> param "typeCode"
+      key <- AbsRef . unPrettyRef <$> pathParam "typeCode" -- is a pathParam?
       out <- liftIO $ do
         DBState env <- wholeDB db
         madt        <- getDB db key
@@ -169,7 +173,7 @@ recordADTFun db (Record adt) = recordADT db adt
 -}
 -- Validate ZM data declarations, return errors if found
 validateZMFun :: Monad m => Validate (SourceCode ZM) -> m [Note Z.String Range]
-validateZMFun (Validate sc@(SourceCode ZM (Z.String s))) = return $ errs s
+validateZMFun (Validate sc@(SourceCode ZM (Z.String s))) = return $ errs (fromString s)
  where
   errs =
     either
@@ -178,9 +182,7 @@ validateZMFun (Validate sc@(SourceCode ZM (Z.String s))) = return $ errs s
             let r = P.label lerr
             in  Note
                   (Z.String (P.object lerr))
-                  (Range (Position (P.line r) (P.start r))
-                         (Position (P.line r) (P.end r))
-                  )
+                  (Range (Position (P.line r) (P.startPos r)) (Position (P.line r) (P.endPos r)))
           )
         )
         (const [])

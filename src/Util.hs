@@ -1,4 +1,4 @@
-module Util where
+module Util(noRequestLogger,msecs,secs,minutes) where
 
 import           Control.Monad.IO.Class
 import           Network.Top.Util       (dbg)
