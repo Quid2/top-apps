@@ -17,8 +17,8 @@ import           Data.String                 (IsString (fromString))
 import           GHC.Arr                     (badSafeIndex)
 import           Network.HostName
 import           Network.HTTP.Client.Conduit (Response (responseStatus))
-import           Network.Pushover
-import           Network.Pushover.Request    (Request (priority))
+-- import           Network.Pushover
+-- import           Network.Pushover.Request    (Request (priority))
 import           Network.Top                 (async, seconds, threadDelay)
 import           Repo.Memory                 ()
 import           System.Environment          (getArgs)
@@ -29,17 +29,19 @@ import           Test.OVH
 import           Test.Types                  (Test (check, name, source, timeoutInSecs))
 import           Test.WWW                    (notContains, wwwTest, wwwTest_)
 import           Util
+import           qualified Network.API.Pushover as P
 
 data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
 
-t = run $ [wwwTest ("https://quid2.org","Flat")]
+t = run [wwwTest ("https://quid2.org","Flat")]
 
 -- NOTE: Need to `make mov` to transfer decoding key
 run :: [Test] -> IO ()
 run tests = do
   po <- gpgDecryptValue "PushoverId.gpg"
-  -- notify po Lowest $ concat ["test@",name," started"]
-  testLoop po tests
+  let name = "here"
+  notify po P.VeryLow "Just joking"
+  -- testLoop po tests
 
 testLoop :: PushoverId -> [Test] -> IO ()
 testLoop po tests = do
@@ -50,32 +52,59 @@ testLoop po tests = do
       where
         hour = 60
         runAll i = do
-            when (i `mod` (12*hour) == 0) $ notify po Lowest "running"
+            when (i `mod` (12*hour) == 0) $ notify po P.VeryLow "running"
             failedTests <- filter (isJust . snd) <$> runTests tests
-            unless (null failedTests) $ void $ notify po High (show  . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
+            unless (null failedTests) $ void $ notify po P.High (show  . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
             threadDelay (seconds 60)
 
 -- Android notifications via https://pushover.net/
-notify :: PushoverId -> Priority -> String -> IO ()
+-- version for https://github.com/dustin/pushover-hs
+notify :: PushoverId -> P.PriorityLevel -> String -> IO ()
 notify po pri msg = do
-    let Right userKey = makeToken $ fromString $ user po
-    let Right apiKey  = makeToken $ fromString $ api po
+    let userKey = fromString $ user po
+    let apiKey  = fromString $ api po
 
     hname <- getHostName
     let me = "test@" ++ hname
 
     -- print $ unlines ["Notifying: ",msg]
-    let msg' = text . fromString . take 256 $ concat [me,": ",msg]
+    let msgTxt = fromString . take 256 $ concat [me,": ",msg]
     -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
+
+    let msg = (P.message apiKey userKey msgTxt)  {P._title="top", P._priority = pri}
 
     -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)
     -- that do not seem to be supported by https://hackage.haskell.org/package/pushover
-    r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (createRequest apiKey userKey msg') {priority=Just pri}
+    -- r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (sendMessage createRequest apiKey userKey msg') {priority=Just pri}
+    r <- P.sendMessage msg
 
     -- FAIL on pushover failure
-    case status r of
-      Success   -> return ()
-      Failure _ -> print $ "EXITING: pushover failure: " ++ show r
+    case r of
+      Right _   -> return ()
+      Left e -> print $ "EXITING: pushover failure: " ++ show r ++ show e
+
+
+-- version for https://hackage.haskell.org/package/pushover 
+-- notify :: PushoverId -> Priority -> String -> IO ()
+-- notify po pri msg = do
+--     let Right userKey = makeToken $ fromString $ user po
+--     let Right apiKey  = makeToken $ fromString $ api po
+
+--     hname <- getHostName
+--     let me = "test@" ++ hname
+
+--     -- print $ unlines ["Notifying: ",msg]
+--     let msg' = text . fromString . take 256 $ concat [me,": ",msg]
+--     -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
+
+--     -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)
+--     -- that do not seem to be supported by https://hackage.haskell.org/package/pushover
+--     r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (createRequest apiKey userKey msg') {priority=Just pri}
+
+--     -- FAIL on pushover failure
+--     case status r of
+--       Success   -> return ()
+--       Failure _ -> print $ "EXITING: pushover failure: " ++ show r
 
 runTests :: Traversable t => t Test -> IO (t (String, Maybe String))
 runTests = mapM runTest
