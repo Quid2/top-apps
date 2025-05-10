@@ -32,6 +32,8 @@ library
     Quid2.Util.Service
     Sensor
     Sensor.Model
+    Model.Validate
+    Util
     -- Test
     -- Test.GPG
     -- Test.OVH
@@ -81,10 +83,6 @@ library
     , utf8-string
     , zm
     , pushover-hs
--- >=0.2.2 && <0.3,
---  >=0.3 && <0.4,
--- zm-language -any,
--- system-linux-proc,
 
 -- TODO : move this to a separate directory
 executable top-test
@@ -122,47 +120,6 @@ executable top-test
     , utf8-string
     , zm
 
--- HaskellNet-SSL -any,
--- TODO: move to sub directory
-executable top-repo
-  main-is:          adtrepo.hs
-  hs-source-dirs:   app src
-  other-modules:
-    App.Types
-    Model.Validate
-    Quid2.Util.Dir
-    Quid2.Util.Service
-    Util
-
-  default-language: Haskell2010
-  ghc-options:      -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      ansi-terminal
-    , base
-    , blaze-html
-    , bytestring
-    , containers
-    , directory
-    , filelock
-    , filepath
-    , Glob
-    , hdaemonize
-    , hslogger
-    , ListLike
-    , mtl
-    , pretty
-    , scotty
-    , temporary
-    , text
-    , top
-    , top-apps
-    , unix
-    , utf8-string
-    , wai
-    , wai-extra
-    , warp
-    , zm
-    , zm-language
 
 -- executable qq
 --     main-is: qq.hs
@@ -204,8 +161,6 @@ executable top-repo
 --     default-language: Haskell2010
 --     ghc-options: -threaded -rtsopts -with-rtsopts=-N
 --     build-depends: base,loglevel,text,async
-
-
 
 
 -- executable top-store
