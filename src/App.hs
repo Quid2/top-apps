@@ -5,31 +5,59 @@
 {- | Example program that continously computes the mean of a list of
  numbers.
 -}
-module App (app, timed) where
+module App (Config,app) where
 
-import qualified Data.Text as T
-import Data.Time.Clock.POSIX (getPOSIXTime)
-import RIO
-import Stats.App (registerAppMetrics, registerAppNames)
-import Stats.Host (registerHostName)
-import System.Metrics (Store, createLabel, newStore)
-import qualified System.Metrics.Counter as Counter
-import qualified System.Metrics.Distribution as Distribution
-import qualified System.Metrics.Label as Label
-import System.Remote.Monitoring.Top (
-    TopOptions (debug, flushInterval),
-    def,
-    forkEkgTop,
- )
+import Prelude
+-- import qualified Data.Text as T
+-- import Data.Time.Clock.POSIX (getPOSIXTime)
+-- import RIO
+-- import Stats.App (registerAppMetrics, registerAppNames)
+-- import Stats.Host (registerHostName)
+-- import System.Metrics (Store, createLabel, newStore)
+-- import qualified System.Metrics.Counter as Counter
+-- import qualified System.Metrics.Distribution as Distribution
+-- import qualified System.Metrics.Label as Label
+-- import System.Remote.Monitoring.Top (
+--     TopOptions (debug, flushInterval),
+--     def,
+--     forkEkgTop,
+--  )
+import           System.Environment        (getArgs, getProgName)
 
-app :: (Store -> IO b) -> IO b
-app op = do
-    store <- newStore
-    registerAppMetrics store
-    registerAppNames store
-    registerHostName store
-    forkEkgTop def{flushInterval = 60, debug = False} store
-    op store
+
+type Config = String
+
+
+app run test = do
+    appName <- getProgName
+    cmd <- parseUserCmd
+    case cmd of 
+        Run -> run appName
+        Test -> test appName
+
+data Cmd = Run | Test deriving (Eq, Show)
+
+parseUserCmd = do
+    args <- getArgs
+    return $ case length args of
+        0 -> Run
+        1 -> case head args of
+            "run"   -> Run
+            "test" -> Test
+            cmd -> err args
+        _ -> err args
+    where 
+        err args = error $ "Unexpected command line parameters: " ++ show args
+
+
+-- app :: (Store -> IO b) -> IO b
+-- app op = do
+--     store <- newStore
+--     registerAppMetrics store
+--     registerAppNames store
+--     registerHostName store
+--     forkEkgTop def{flushInterval = 60, debug = False} store
+--     op store
 
 -- host :: IO ()
 -- host = app $ \store -> do
@@ -53,12 +81,12 @@ app op = do
 --             loop n
 --     loop 1000000
 
-timed :: IO a -> IO Double
-timed m = do
-    start <- getTime
-    m
-    end <- getTime
-    return $! end - start
+-- timed :: IO a -> IO Double
+-- timed m = do
+--     start <- getTime
+--     m
+--     end <- getTime
+--     return $! end - start
 
-getTime :: IO Double
-getTime = realToFrac `fmap` getPOSIXTime
+-- getTime :: IO Double
+-- getTime = realToFrac `fmap` getPOSIXTime
