@@ -1,3 +1,4 @@
+**/dist-newstyle
 /bower_components/
 /node_modules/
 /.pulp-cache/
@@ -11,11 +12,11 @@
 /log
 /hie.yaml
 /*.lock
-state
 store
 .history
 purescript
 qq-tutorial
-stack*.yaml
 .stack-work
 stack.yaml.lock
+app/twitter/twitter-download
+
