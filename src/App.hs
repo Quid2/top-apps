@@ -2,10 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-{- | Example program that continously computes the mean of a list of
- numbers.
--}
-module App (Config,app) where
+module App (Config(..),Mode(..),app) where
 
 import Prelude
 -- import qualified Data.Text as T
@@ -23,32 +20,61 @@ import Prelude
 --     forkEkgTop,
 --  )
 import           System.Environment        (getArgs, getProgName)
+import           System.FilePath
+import           System.Directory
+import           System.IO
+import           System.Posix            hiding ( Start
+                                                , Stop
+                                                )
+import           System.IO.Temp
 
+data Config c = Config  
+  { name :: String
+  , mode :: Mode
+  , stateDir :: FilePath
+  , logDir :: FilePath
+  , tmpDir :: FilePath
+  , appConf :: Maybe c
+  } deriving (Show)
 
-type Config = String
+data Mode = Run | Test deriving (Eq, Show)
 
-
-app run test = do
+app :: Read c => (Config c -> IO b) -> IO b
+app main = do
     appName <- getProgName
-    cmd <- parseUserCmd
-    case cmd of 
-        Run -> run appName
-        Test -> test appName
+    appDir <- getCurrentDirectory
+    let stateDir   = appDir </> "state"
+    let logDir     = appDir </> "log"
+    -- let logFile    = logDir </> "debug.txt"
+    mkDir stateDir
+    mkDir logDir
+    tmpRoot <- getCanonicalTemporaryDirectory
+    tmpDir <- createTempDirectory tmpRoot appName
+    let cfg = Config {
+          name = appName
+        , mode = Run
+        , stateDir = stateDir
+        , logDir   = logDir
+        , tmpDir   = tmpDir
+        , appConf  = Nothing
+        }
 
-data Cmd = Run | Test deriving (Eq, Show)
+    cfg' <- parseUserCmd cfg
+    main cfg'
 
-parseUserCmd = do
+mkDir :: FilePath -> IO ()
+mkDir = createDirectoryIfMissing True
+
+parseUserCmd :: Read c => Config c -> IO (Config c)
+parseUserCmd cfg = do
     args <- getArgs
-    return $ case length args of
-        0 -> Run
-        1 -> case head args of
-            "run"   -> Run
-            "test" -> Test
-            cmd -> err args
-        _ -> err args
-    where 
-        err args = error $ "Unexpected command line parameters: " ++ show args
-
+    return $ case args of
+        [] -> cfg
+        ["run"] -> cfg
+        ["test"] -> cfg {mode=Test}
+        ["run",appCfg] -> cfg {appConf=Just $ read appCfg}
+        ["test", appCfg] -> cfg {mode=Test,appConf=Just $ read appCfg}
+        _ -> error $ "Unexpected command line parameters: " ++ show args
 
 -- app :: (Store -> IO b) -> IO b
 -- app op = do
