@@ -1,113 +1,87 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TupleSections             #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use replicateM" #-}
 
-module Test(run,Test,wwwTest,wwwTest_,notContains,ovhTest) where
+module Test
+  ( runTests,
+    wwwTest,
+  )
+where
 
-import           Control.Concurrent.Async    (async, waitCatch)
-import           Control.Monad
-import           Control.Retry               (recoverAll, retryPolicy,
-                                              retryPolicyDefault)
-import qualified Data.Map                    as M
-import           Data.Maybe                  (isJust)
-import           Data.String                 (IsString (fromString))
-import           GHC.Arr                     (badSafeIndex)
-import           Network.HostName
-import           Network.HTTP.Client.Conduit (Response (responseStatus))
--- import           Network.Pushover
--- import           Network.Pushover.Request    (Request (priority))
-import           Network.Top                 (async, seconds, threadDelay)
-import           Repo.Memory                 ()
-import           System.Environment          (getArgs)
-import           System.Exit                 (ExitCode)
-import           System.Timeout              (timeout)
-import           Test.GPG                    (gpgDecryptValue)
-import           Test.OVH
-import           Test.Types                  (Test (check, name, source, timeoutInSecs))
-import           Test.WWW                    (notContains, wwwTest, wwwTest_)
-import           Util
-import           qualified Network.API.Pushover as P
+import Control.Concurrent.Async (async, waitCatch)
+import Control.Retry
 
-data PushoverId = PushoverId {user,api::String} deriving (Show,Read)
+import qualified Data.Map as M
+import Data.Maybe (catMaybes, isJust, maybeToList)
+import Data.String (IsString (fromString))
+import GHC.Arr (badSafeIndex)
+import Network.HostName
+import Network.Top (async, seconds, threadDelay)
+import Repo.Memory ()
+import System.Environment (getArgs)
+import System.Exit (ExitCode)
+import System.Timeout (timeout)
+import Test.OVH
+import Test.Types (Test (check, name, source, timeoutInSecs))
+import Test.WWW (notContains, wwwTest, wwwTest_)
+import Util
 
-t = run [wwwTest ("https://quid2.org","Flat")]
+-- main = run [ovhTest "KS-17"] --
+-- [ovhTest "KS-1",ovhTest "KS-2"] ++
+
+
+{-
+Run a list of tests concurrently and return list of failures when all are done or timed out
+
+>>> runTests [wwwTest ("http://net.quid2.org/","top-router"),wwwTest ("http://net.quid2.org/","top-sdsdroutery"),wwwTest ("http://net.quid2.org/","top-router")]
+["http://net.quid2.org/: does not contain \"top-sdsdroutery\""]
+-}
+runTests :: [Test] -> IO [String]
+runTests tests = do
+  threads <- mapM (async . runTest) tests
+  catMaybes <$> mapM (fmap chk . waitCatch) threads
+  where
+    chk (Left exp) = Just (fromString . show $ exp)
+    chk (Right Nothing) = Nothing
+    chk (Right (Just s)) = Just s
+
+-- >>> runTest $ wwwTest ("http://net.quid2.org/","top-router")
+-- Nothing
+-- >>> runTest $ wwwTest ("http://net.quid2.org/","top-routery")
+-- Just "http://net.quid2.org/: does not contain \"top-routery\""
+runTest t = do
+  r <- timeout (seconds $ timeoutInSecs t) (source t)
+  return $ fmap (\r -> name t <> ": " <> r) $ case r of
+    Nothing -> Just "Timeout"
+    Just c -> check t c
+  where
+    -- chk :: Either SomeException (Maybe B8.ByteString) -> Either B8.ByteString B8.ByteString
+    chk (Left exp) = Left (fromString . show $ exp)
+    chk (Right Nothing) = Left "Test Timeout"
+    chk (Right (Just s)) = Right s
+
+-- t = run logger [wwwTest ("https://quid2.org", "Flat")]
 
 -- NOTE: Need to `make mov` to transfer decoding key
-run :: [Test] -> IO ()
-run tests = do
-  po <- gpgDecryptValue "PushoverId.gpg"
-  let name = "here"
-  notify po P.VeryLow "Just joking"
-  -- testLoop po tests
+-- run :: Logger ->  [Test] -> IO ()
+-- run logger tests = do
+--   let name = "here"
+--   testLoop logger tests
 
-testLoop :: PushoverId -> [Test] -> IO ()
-testLoop po tests = do
-   -- print po
+-- testLoop :: PushoverId -> [Test] -> IO ()
+-- testLoop logger tests = do
+--   mapM_ runAll [0 ..]
+--   where
+--     hour = 60
+--     runAll i = do
+--       when (i `mod` (12 * hour) == 0) $ info logger "running"
+--       failedTests <- filter (isJust . snd) <$> runTests tests
+--       unless (null failedTests) $ void $ err logger (show . map (\(name, Just err) -> unwords [name, err]) $ failedTests)
+--       threadDelay (seconds 60)
 
-   -- forever $ runAll
-  mapM_ runAll [0..]
-      where
-        hour = 60
-        runAll i = do
-            when (i `mod` (12*hour) == 0) $ notify po P.VeryLow "running"
-            failedTests <- filter (isJust . snd) <$> runTests tests
-            unless (null failedTests) $ void $ notify po P.High (show  . map (\(name,Just err) -> unwords [name,err]) $ failedTests)
-            threadDelay (seconds 60)
-
--- Android notifications via https://pushover.net/
--- version for https://github.com/dustin/pushover-hs
-notify :: PushoverId -> P.PriorityLevel -> String -> IO ()
-notify po pri msg = do
-    let userKey = fromString $ user po
-    let apiKey  = fromString $ api po
-
-    hname <- getHostName
-    let me = "test@" ++ hname
-
-    -- print $ unlines ["Notifying: ",msg]
-    let msgTxt = fromString . take 256 $ concat [me,": ",msg]
-    -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
-
-    let msg = (P.message apiKey userKey msgTxt)  {P._title="top", P._priority = pri}
-
-    -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)
-    -- that do not seem to be supported by https://hackage.haskell.org/package/pushover
-    -- r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (sendMessage createRequest apiKey userKey msg') {priority=Just pri}
-    r <- P.sendMessage msg
-
-    -- FAIL on pushover failure
-    case r of
-      Right _   -> return ()
-      Left e -> print $ "EXITING: pushover failure: " ++ show r ++ show e
-
-
--- version for https://hackage.haskell.org/package/pushover 
--- notify :: PushoverId -> Priority -> String -> IO ()
--- notify po pri msg = do
---     let Right userKey = makeToken $ fromString $ user po
---     let Right apiKey  = makeToken $ fromString $ api po
-
---     hname <- getHostName
---     let me = "test@" ++ hname
-
---     -- print $ unlines ["Notifying: ",msg]
---     let msg' = text . fromString . take 256 $ concat [me,": ",msg]
---     -- r <- recoverAll retryPolicyDefault $ \_ -> sendMessage apiKey userKey msg'
-
---     -- PROB: Emergency level requires Retry/Expire parameters (see https://pushover.net/api#messages)
---     -- that do not seem to be supported by https://hackage.haskell.org/package/pushover
---     r <- recoverAll retryPolicyDefault $ \_ -> sendRequest $ (createRequest apiKey userKey msg') {priority=Just pri}
-
---     -- FAIL on pushover failure
---     case status r of
---       Success   -> return ()
---       Failure _ -> print $ "EXITING: pushover failure: " ++ show r
-
-runTests :: Traversable t => t Test -> IO (t (String, Maybe String))
-runTests = mapM runTest
+-- runTests :: (Traversable t) => t Test -> IO (t (String, Maybe String))
+-- runTests = mapM runTest
 
 {-
 >>> sequence [return $ Just "ok",return $ Just "badSafeIndex"]
@@ -117,83 +91,30 @@ Just ["ok","badSafeIndex"]
 Nothing
 -}
 -- Returns (test name ,Nothing if ok or Just error)
-runTest :: Test -> IO (String, Maybe String)
+-- runTest :: Test -> IO (String, Maybe String)
 -- runTest t = do
 --   rs <- sequence <$> replicateM 3 (runTest_ t)
 --   return (name t, head <$> rs)
 
 -- r t = (name t,) <$> go 2
-runTest t = (name t,) <$> go 2
- where
-   go 0 = runTest_ t
-   go n  = do
-    rt <- runTest_ t
-    case rt of
-      Nothing -> return Nothing
-      Just _  -> threadDelay (secs 30) >> go (n-1)
-
-runTest_ :: Test -> IO (Maybe String)
-runTest_ t = do
-    r <- chk <$> (async (timeout (seconds $ timeoutInSecs t) (source t)) >>= waitCatch)
-    -- print r
-    return $ case r of
-        Left e  -> Just e
-        Right c -> check t c
-  where
-
-    -- chk :: Either SomeException (Maybe B8.ByteString) -> Either B8.ByteString B8.ByteString
-    chk (Left exp)       = Left (fromString . show $ exp)
-    chk (Right Nothing)  = Left "Test Timeout"
-    chk (Right (Just s)) = Right s
-
-
--- import System.Directory
--- import qualified Control.Exception as E
-
--- gpgDecrypt :: FilePath -> IO String
--- gpgDecrypt f = do
---         gpgbin <- getGpgBin
---         ifM (doesFileExist f)
---                 ( writeReadProcessEnv gpgbin ["--decrypt", f] Nothing Nothing Nothing
---                 , return ""
---                 )
-
--- writeReadProcessEnv
---         :: FilePath
---         -> [String]
---         -> Maybe [(String, String)]
---         -> (Maybe (Handle -> IO ()))
---         -> (Maybe (Handle -> IO ()))
---         -> IO String
--- writeReadProcessEnv cmd args environ writestdin adjusthandle = do
---         (Just inh, Just outh, _, pid) <- createProcess p
-
---         maybe (return ()) (\a -> a inh) adjusthandle
---         maybe (return ()) (\a -> a outh) adjusthandle
-
---         -- fork off a thread to start consuming the output
---         output  <- hGetContents outh
---         outMVar <- newEmptyMVar
---         _ <- forkIO $ E.evaluate (length output) >> putMVar outMVar ()
-
---         -- now write and flush any input
---         maybe (return ()) (\a -> a inh >> hFlush inh) writestdin
---         hClose inh -- done with stdin
-
---         -- wait on the output
---         takeMVar outMVar
---         hClose outh
-
---         -- wait on the process
---         forceSuccessProcess p pid
-
---         return output
-
+-- runTest t = (name t,) <$> go 2
 --   where
---         p = (proc cmd args)
---                 { std_in = CreatePipe
---                 , std_out = CreatePipe
---                 , std_err = Inherit
---                 , env = environ
---                 }
+--     go 0 = runTest_ t
+--     go n = do
+--       rt <- runTest_ t
+--       case rt of
+--         Nothing -> return Nothing
+--         Just _ -> threadDelay (secs 30) >> go (n - 1)
 
+-- runTest_ :: Test -> IO (Maybe String)
+-- runTest_ t = do
+--   r <- chk <$> (async (timeout (seconds $ timeoutInSecs t) (source t)) >>= waitCatch)
+--   -- print r
+--   return $ case r of
+--     Left e -> Just e
+--     Right c -> check t c
+--   where
+--     -- chk :: Either SomeException (Maybe B8.ByteString) -> Either B8.ByteString B8.ByteString
+--     chk (Left exp) = Left (fromString . show $ exp)
+--     chk (Right Nothing) = Left "Test Timeout"
+--     chk (Right (Just s)) = Right s
