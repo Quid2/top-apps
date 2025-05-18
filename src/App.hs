@@ -1,10 +1,23 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module App (Config(..),Mode(..),app) where
+module App
+  ( Config (..),
+    Mode (..),
+    app,
+    AppCode (..),
+    AppLog,
+    infoApp,
+    warnApp,
+    errApp,
+    netLog,
+  )
+where
 
-import Prelude
 -- import qualified Data.Text as T
 -- import Data.Time.Clock.POSIX (getPOSIXTime)
 -- import RIO
@@ -19,62 +32,123 @@ import Prelude
 --     def,
 --     forkEkgTop,
 --  )
-import           System.Environment        (getArgs, getProgName)
-import           System.FilePath
-import           System.Directory
-import           System.IO
-import           System.Posix            hiding ( Start
-                                                , Stop
-                                                )
-import           System.IO.Temp
 
-data Config c = Config  
-  { name :: String
-  , mode :: Mode
-  , stateDir :: FilePath
-  , logDir :: FilePath
-  , tmpDir :: FilePath
-  , appConf :: Maybe c
-  } deriving (Show)
+import Control.Concurrent (forkIO)
+import Data.Maybe (isJust, listToMaybe)
+import Data.Text (Text, pack)
+import NetLog
+import Network.HostName (getHostName)
+import Network.Top hiding (Config, Logger, err, info, warn)
+import System.Directory
+import System.Environment (getArgs, getProgName)
+import System.FilePath
+import System.IO
+import System.IO.Temp
+import System.Posix hiding
+  ( Start,
+    Stop,
+  )
+import Text.Read (readMaybe)
+import Prelude
 
-data Mode = Run | Test deriving (Eq, Show)
+app appCode = do
+  appNameS <- getProgName
+  let appName = pack appNameS
+  appDir <- getCurrentDirectory
+  let stateDir = appDir </> "state"
+  let logDir = appDir </> "log"
+  -- let logFile    = logDir </> "debug.txt"
+  mkDir stateDir
+  mkDir logDir
+  tmpRoot <- getCanonicalTemporaryDirectory
+  tmpDir <- createTempDirectory tmpRoot appNameS
+  host <- pack <$> getHostName
+  let cfg =
+        Config
+          { name = appName,
+            key = AppID {appID = appName, hostID = host, instanceID = ""},
+            mode = Run,
+            stateDir = stateDir,
+            logDir = logDir,
+            tmpDir = tmpDir,
+            appConf = Nothing
+          }
 
-app :: Read c => (Config c -> IO b) -> IO b
-app main = do
-    appName <- getProgName
-    appDir <- getCurrentDirectory
-    let stateDir   = appDir </> "state"
-    let logDir     = appDir </> "log"
-    -- let logFile    = logDir </> "debug.txt"
-    mkDir stateDir
-    mkDir logDir
-    tmpRoot <- getCanonicalTemporaryDirectory
-    tmpDir <- createTempDirectory tmpRoot appName
-    let cfg = Config {
-          name = appName
-        , mode = Run
-        , stateDir = stateDir
-        , logDir   = logDir
-        , tmpDir   = tmpDir
-        , appConf  = Nothing
-        }
-
-    cfg' <- parseUserCmd cfg
-    main cfg'
+  cfg' <- parseUserCmd cfg
+  -- print cfg'
+  case mode cfg' of
+    Run -> do
+      forkIO $ basicRun cfg'
+      appRun appCode cfg'
+    Test -> do
+      forkIO $ basicTest cfg'
+      appTest appCode cfg'
 
 mkDir :: FilePath -> IO ()
 mkDir = createDirectoryIfMissing True
 
-parseUserCmd :: Read c => Config c -> IO (Config c)
-parseUserCmd cfg = do
-    args <- getArgs
-    return $ case args of
-        [] -> cfg
-        ["run"] -> cfg
-        ["test"] -> cfg {mode=Test}
-        ["run",appCfg] -> cfg {appConf=Just $ read appCfg}
-        ["test", appCfg] -> cfg {mode=Test,appConf=Just $ read appCfg}
-        _ -> error $ "Unexpected command line parameters: " ++ show args
+parseUserCmd :: (Read c) => Config c -> IO (Config c)
+parseUserCmd cfg0 = do
+  args <- getArgs
+  let hasKey = not (null args) && isJust (readMaybe (head args) :: Maybe Integer)
+  let (maybeKey :: Maybe Integer, rargs) = if hasKey then (readMaybe (head args), tail args) else (Nothing, args)
+  let cfg = cfg0 {key = (key cfg0) {instanceID = maybe "" (pack . show) maybeKey}}
+  return $ case rargs of
+    [] -> cfg
+    ["run"] -> cfg
+    ["test"] -> cfg {mode = Test}
+    ["run", appCfg] -> cfg {appConf = Just $ read appCfg}
+    ["test", appCfg] -> cfg {mode = Test, appConf = Just $ read appCfg}
+    _ -> error $ "Unexpected command line parameters: " ++ show args
+
+basicRun :: Config c -> IO ()
+basicRun cfg = forever $ do
+  -- send heartbeat
+  info netLog (key cfg) ("OK" :: Text)
+  threadDelay (seconds 1)
+
+basicTest :: Config c -> IO ()
+basicTest cfg = run loop
+  where
+    loop conn = do
+      mr :: Maybe AppLog <- inputWithTimeout 3 conn
+      case mr of
+        Nothing -> err netLog (key cfg) ("No heartbeat detected" :: Text) >> loop conn
+        Just _ -> loop conn
+
+-- >>> once
+-- Right [(),(),(),(),(),(),(),(),()]
+once :: IO (Either String [()])
+once = do
+  run $ recordType (Proxy :: Proxy AppLog)
+
+type AppLog = Log AppID Text Text Text
+
+infoApp, warnApp, errApp :: Logger AppID Text Text Text -> AppID -> Text -> IO ()
+infoApp = info
+warnApp = warn
+errApp = err
+
+data Config c = Config
+  { name :: Text,
+    key :: AppID,
+    mode :: Mode,
+    stateDir :: FilePath,
+    logDir :: FilePath,
+    tmpDir :: FilePath,
+    appConf :: Maybe c
+  }
+  deriving (Show)
+
+data Mode = Run | Test deriving (Eq, Show)
+
+data AppCode cfg = AppCode
+  {appRun, appTest :: Config cfg -> IO (), hasState :: Bool}
+
+-- Every app instance is uniquely identified (multiple app instances can run on the same host)
+data AppID = AppID {appID :: Text, hostID :: Text, instanceID :: Text} deriving (Eq, Ord, Show, Generic, Flat)
+
+instance Model AppID
 
 -- app :: (Store -> IO b) -> IO b
 -- app op = do
