@@ -15,6 +15,7 @@ module App
     warnApp,
     errApp,
     netLog,
+    logTests,
   )
 where
 
@@ -48,9 +49,13 @@ import System.Posix hiding
   ( Start,
     Stop,
   )
+import Test (runTests)
 import Text.Read (readMaybe)
+import Turtle hiding (err)
+import Util (periodically)
 import Prelude
 
+app :: (Read cfg) => AppCode cfg -> IO ()
 app appCode = do
   appNameS <- getProgName
   let appName = pack appNameS
@@ -67,7 +72,7 @@ app appCode = do
         Config
           { name = appName,
             key = AppID {appID = appName, hostID = host, instanceID = ""},
-            mode = Run,
+            mode = RunMode,
             stateDir = stateDir,
             logDir = logDir,
             tmpDir = tmpDir,
@@ -76,16 +81,27 @@ app appCode = do
 
   cfg' <- parseUserCmd cfg
   -- print cfg'
+
+  when (hasState appCode) $ periodically 60 (pushState cfg)
+
+  -- Run/Test till interrupted
   case mode cfg' of
-    Run -> do
-      forkIO $ basicRun cfg'
-      appRun appCode cfg'
-    Test -> do
-      forkIO $ basicTest cfg'
-      appTest appCode cfg'
+    RunMode -> do
+      forkIO $ appRun appCode cfg'
+      basicRun cfg'
+    TestMode -> do
+      forkIO $ appTest appCode cfg'
+      basicTest cfg'
 
 mkDir :: FilePath -> IO ()
 mkDir = createDirectoryIfMissing True
+
+-- >>> pushState
+pushState cfg = do
+  rt <- shell "git add state;git commit -m \"save state\";git push" empty
+  case rt of
+    ExitFailure e -> errApp netLog (key cfg) (pack $ "Save state failed: " <> show e)
+    _ -> return ()
 
 parseUserCmd :: (Read c) => Config c -> IO (Config c)
 parseUserCmd cfg0 = do
@@ -96,9 +112,9 @@ parseUserCmd cfg0 = do
   return $ case rargs of
     [] -> cfg
     ["run"] -> cfg
-    ["test"] -> cfg {mode = Test}
+    ["test"] -> cfg {mode = TestMode}
     ["run", appCfg] -> cfg {appConf = Just $ read appCfg}
-    ["test", appCfg] -> cfg {mode = Test, appConf = Just $ read appCfg}
+    ["test", appCfg] -> cfg {mode = TestMode, appConf = Just $ read appCfg}
     _ -> error $ "Unexpected command line parameters: " ++ show args
 
 basicRun :: Config c -> IO ()
@@ -113,7 +129,7 @@ basicTest cfg = run loop
     loop conn = do
       mr :: Maybe AppLog <- inputWithTimeout 3 conn
       case mr of
-        Nothing -> err netLog (key cfg) ("No heartbeat detected" :: Text) >> loop conn
+        Nothing -> errApp netLog (key cfg) ("No heartbeat detected" :: Text) >> loop conn
         Just _ -> loop conn
 
 -- >>> once
@@ -129,6 +145,8 @@ infoApp = info
 warnApp = warn
 errApp = err
 
+logTests cfg tests = periodically 60 $ runTests tests >>= mapM_ (errApp netLog (key cfg) . pack)
+
 data Config c = Config
   { name :: Text,
     key :: AppID,
@@ -140,10 +158,12 @@ data Config c = Config
   }
   deriving (Show)
 
-data Mode = Run | Test deriving (Eq, Show)
+data Mode = RunMode | TestMode deriving (Eq, Show)
 
 data AppCode cfg = AppCode
-  {appRun, appTest :: Config cfg -> IO (), hasState :: Bool}
+  { appRun, appTest :: Config cfg -> IO (),
+    hasState :: Bool
+  }
 
 -- Every app instance is uniquely identified (multiple app instances can run on the same host)
 data AppID = AppID {appID :: Text, hostID :: Text, instanceID :: Text} deriving (Eq, Ord, Show, Generic, Flat)

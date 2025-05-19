@@ -4,14 +4,14 @@ import qualified Data.ByteString.Char8 as B8
 import qualified Data.Map as M
 import Network.HTTP.Conduit (Request, parseRequest)
 import Network.HTTP.Simple (getResponseBody, httpBS)
-import Test.Types (Check, Test (Test))
+import Test.Types
 
 wwwTest :: (String, B8.ByteString) -> Test
 wwwTest = wwwTest_ contains
 
-wwwTest_ cond (url, key) = Test url 30 (parseRequest url >>= getURL) (cond key)
+wwwTest_ cond (url, key) = test url (cond key) (parseRequest url >>= getURL)
 
-notNull :: Check
+notNull :: B8.ByteString -> Maybe String
 notNull s = if B8.null s then Just "No content" else Nothing
 
 -- contains "Flat"
