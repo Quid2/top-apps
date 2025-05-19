@@ -5,7 +5,7 @@
 module Test.Types (Test (..), test, testIf, runTest) where
 
 import Network.Top (seconds)
-import RIO (SomeException, try, tryAnyDeep)
+import RIO (Bifunctor (second), SomeException, threadDelay, try, tryAnyDeep)
 import System.Timeout (timeout)
 
 {-
@@ -24,8 +24,21 @@ data Test = forall r. Test
         r
   }
 
+{-
+>>> runTest $ Test "toolong" 3 (const Nothing) (threadDelay (seconds 5) >> return "OK")
+Just "toolong: Timeout"
+
+  >>> runTest $ test "toolong2" (const Nothing) (threadDelay (seconds 50) >> return "OK")
+Just "toolong2: Timeout"
+
+>>> runTest $ testIf "toolong3" (const True) (threadDelay (seconds 50) >> return "OK")
+Just "toolong3: Timeout"
+
+-}
+t1 = Test "toolong" 3 (const Nothing) (threadDelay (seconds 5) >> return "OK")
+
 testIf :: String -> (r -> Bool) -> IO r -> Test
-testIf name chk = test name (\r -> if chk r then Nothing else Just (name <> " failed"))
+testIf name chk = test name (\r -> if chk r then Nothing else Just "failed")
 
 test :: String -> (r -> Maybe String) -> IO r -> Test
 test name = Test name 30
