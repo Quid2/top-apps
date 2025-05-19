@@ -88,6 +88,7 @@ library
     , unix
     , unordered-containers
     , utf8-string
+    , turtle
     , zm
 
 -- TODO : move this to a separate directory
