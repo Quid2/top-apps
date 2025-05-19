@@ -5,6 +5,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
+{-
+TODO:
+Add memory/elapsed time
+Add privileged support for WWW
+-}
 module App
   ( Config (..),
     Mode (..),
@@ -100,7 +105,7 @@ mkDir = createDirectoryIfMissing True
 pushState cfg = do
   rt <- shell "git add state;git commit -m \"save state\";git push" empty
   case rt of
-    ExitFailure e -> errApp netLog (key cfg) (pack $ "Save state failed: " <> show e)
+    ExitFailure e -> return () -- FIX errApp netLog (key cfg) (pack $ "Save state failed: " <> show e)
     _ -> return ()
 
 parseUserCmd :: (Read c) => Config c -> IO (Config c)
