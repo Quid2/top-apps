@@ -75,7 +75,7 @@ app appCode = do
   let cfg =
         Config
           { name = appName,
-            key = AppID {appID = appName, hostID = host, instanceID = ""},
+            key = AppID {appID = appName, hostID = host}, -- , instanceID = appName},
             mode = RunMode,
             stateDir = stateDir,
             logDir = logDir,
@@ -84,7 +84,6 @@ app appCode = do
           }
 
   cfg' <- parseUserCmd cfg
-  -- print cfg'
 
   when (hasState appCode) $ periodically 60 (pushState cfg)
 
@@ -112,7 +111,10 @@ parseUserCmd cfg0 = do
   args <- getArgs
   let hasKey = not (null args) && isJust (readMaybe (head args) :: Maybe Integer)
   let (maybeKey :: Maybe Integer, rargs) = if hasKey then (readMaybe (head args), tail args) else (Nothing, args)
-  let cfg = cfg0 {key = (key cfg0) {instanceID = maybe "" (pack . show) maybeKey}}
+  let cfg = cfg0
+  -- let cfg = case maybeKey of
+  --       Just akey -> cfg0 {key = (key cfg0) {instanceID = pack . show $ akey}}
+  --       Nothing -> cfg0
   return $ case rargs of
     [] -> cfg
     ["run"] -> cfg
@@ -127,10 +129,6 @@ basicRun cfg = forever $ do
   info netLog (key cfg) ("OK" :: Text)
   threadDelay (seconds 1)
 
--- >>> print "I"
---
--- BUG: patternE does not constrain the type of the message or is type checked at all?
--- basicTest cfg = runApp def (byPattern $(patternE [p|Info "OK"|])) loop
 basicTest :: Config c -> IO ()
 basicTest cfg = run loop
   where
@@ -143,13 +141,12 @@ basicTest cfg = run loop
       threadDelay (seconds 1)
       loop conn
 
--- >>> timeout (seconds 3) $ run (check (AppID {appID = "top-repo", hostID = "n1", instanceID = ""}))
-check akey conn = do
+check :: AppID -> Connection AppLog -> IO ()
+check aKey conn = do
   log :: AppLog <- input conn
   case log of
-    Info rkey "OK" | rkey == akey -> return ()
-    -- \| rkey == akey
-    _ -> check akey conn
+    Info app "OK" | appID app == appID aKey -> return ()
+    _ -> check aKey conn
 
 -- >>> once
 -- Right [(),(),(),(),(),(),(),(),()]
@@ -184,8 +181,12 @@ data AppCode cfg = AppCode
     hasState :: Bool
   }
 
--- Every app instance is uniquely identified (multiple app instances can run on the same host)
-data AppID = AppID {appID :: Text, hostID :: Text, instanceID :: Text} deriving (Eq, Ord, Show, Generic, Flat)
+data AppID = AppID
+  { appID :: Text,
+    hostID :: Text
+    -- instanceID :: Text -- NO Every app instance is uniquely identified (multiple app instances can run on the same host)
+  }
+  deriving (Eq, Ord, Show, Generic, Flat)
 
 instance Model AppID
 
