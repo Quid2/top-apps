@@ -3,12 +3,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 {-
-TODO:
-Add memory/elapsed time
-Add privileged support for WWW
 -}
 module App
   ( Config (..),
@@ -54,9 +52,10 @@ import System.Posix hiding
   ( Start,
     Stop,
   )
+import System.Timeout
 import Test (runTests)
 import Text.Read (readMaybe)
-import Turtle hiding (err)
+import Turtle hiding (err, input)
 import Util (periodically)
 import Prelude
 
@@ -128,14 +127,29 @@ basicRun cfg = forever $ do
   info netLog (key cfg) ("OK" :: Text)
   threadDelay (seconds 1)
 
+-- >>> print "I"
+--
+-- BUG: patternE does not constrain the type of the message or is type checked at all?
+-- basicTest cfg = runApp def (byPattern $(patternE [p|Info "OK"|])) loop
 basicTest :: Config c -> IO ()
 basicTest cfg = run loop
   where
     loop conn = do
-      mr :: Maybe AppLog <- inputWithTimeout 3 conn
-      case mr of
-        Nothing -> errApp netLog (key cfg) ("No heartbeat detected" :: Text) >> loop conn
-        Just _ -> loop conn
+      let akey = key cfg
+      isOK <- timeout (seconds 3) $ check akey conn
+      case isOK of
+        Nothing -> errApp netLog akey ("No heartbeat detected" :: Text)
+        Just _ -> return ()
+      threadDelay (seconds 1)
+      loop conn
+
+-- >>> timeout (seconds 3) $ run (check (AppID {appID = "top-repo", hostID = "n1", instanceID = ""}))
+check akey conn = do
+  log :: AppLog <- input conn
+  case log of
+    Info rkey "OK" | rkey == akey -> return ()
+    -- \| rkey == akey
+    _ -> check akey conn
 
 -- >>> once
 -- Right [(),(),(),(),(),(),(),(),()]
