@@ -43,6 +43,7 @@ import Data.Text (Text, pack)
 import NetLog
 import Network.HostName (getHostName)
 import Network.Top hiding (Config, Logger, err, info, warn)
+import RIO (tryDeep)
 import System.Directory
 import System.Environment (getArgs, getProgName)
 import System.FilePath
@@ -55,7 +56,7 @@ import System.Posix hiding
 import System.Timeout
 import Test (runTests)
 import Text.Read (readMaybe)
-import Turtle hiding (err, input)
+import Turtle hiding (err, input, once)
 import Util (periodically)
 import Prelude
 
@@ -93,7 +94,7 @@ app appCode = do
       forkIO $ appRun appCode cfg'
       basicRun cfg'
     TestMode -> do
-      forkIO $ appTest appCode cfg'
+      forkIO $ restartOnFailure "appTest" (errApp netLog (key cfg)) $ appTest appCode cfg'
       basicTest cfg'
 
 mkDir :: FilePath -> IO ()
@@ -129,8 +130,20 @@ basicRun cfg = forever $ do
   info netLog (key cfg) ("OK" :: Text)
   threadDelay (seconds 1)
 
+restartOnFailure :: (NFData a) => Text -> (Text -> IO ()) -> IO a -> IO a
+restartOnFailure name logError op = go
+  where
+    go = do
+      er <- tryDeep op
+      case er of
+        Left (e :: SomeException) -> do
+          logError (name <> " restarting after error " <> pack (show e))
+          threadDelay (seconds 5)
+          go
+        Right r -> return r
+
 basicTest :: Config c -> IO ()
-basicTest cfg = run loop
+basicTest cfg = restartOnFailure "basicTest" (errApp netLog (key cfg)) $ run loop
   where
     loop conn = do
       let akey = key cfg
