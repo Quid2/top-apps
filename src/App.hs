@@ -130,6 +130,7 @@ basicRun cfg = forever $ do
   info netLog (key cfg) ("OK" :: Text)
   threadDelay (seconds 1)
 
+-- TODO: add persistent internal log
 restartOnFailure :: (NFData a) => Text -> (Text -> IO ()) -> IO a -> IO a
 restartOnFailure name logError op = go
   where
@@ -137,7 +138,8 @@ restartOnFailure name logError op = go
       er <- tryDeep op
       case er of
         Left (e :: SomeException) -> do
-          logError (name <> " restarting after error " <> pack (show e))
+          -- This will probably fail as well
+          -- logError (name <> " restarting after error " <> pack (show e))
           threadDelay (seconds 5)
           go
         Right r -> return r
