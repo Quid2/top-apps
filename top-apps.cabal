@@ -29,7 +29,7 @@ library
     Model.Report.Util
     Model.StoreProtocol
     Quid2.Util.Dir
-    -- Quid2.Util.Service
+    Quid2.Util.Service
     Sensor
     Sensor.Model
     Model.Validate
