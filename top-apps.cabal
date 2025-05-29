@@ -23,7 +23,7 @@ source-repository head
 library
   exposed-modules:
     App
-    -- App.Types
+    App.Types
     Data.Time.Util
     Model.Report
     Model.Report.Util
